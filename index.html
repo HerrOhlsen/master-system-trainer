@@ -1296,13 +1296,14 @@ function startReihe(){
      new block opens. A stored choice is intersected with what is unlocked, so
      locking a block again can never smuggle it back into the pool. */
   const openBlocks = [...state.unlocked].sort((a, b) => a - b);
-  /* 0 to 9 never form pairs, so the picker only offers blocks that actually
-     contribute two digit numbers, unless that is all there is. */
-  const pairBlocks = openBlocks.filter(block => block > 0);
-  const choosable = pairBlocks.length ? pairBlocks : openBlocks;
-  let picked = (state.settings.reiheBlocks || choosable).filter(b => choosable.includes(b));
-  if(!picked.length) picked = [...choosable];
-  if(choosable.length > 1){
+  /* 0 to 9 never form pairs, so only blocks holding two digit numbers can be
+     picked from. While none of them is unlocked the drill falls back to single
+     digits and says so, rather than silently dropping the whole row. */
+  const choosable = openBlocks.filter(block => block > 0);
+  const pool = choosable.length ? choosable : openBlocks;
+  let picked = (state.settings.reiheBlocks || pool).filter(b => pool.includes(b));
+  if(!picked.length) picked = [...pool];
+  if(choosable.length){
     setup.appendChild(el("p", "muted", "Aus welchem Bereich?"));
     const blockChips = el("div", "chips");
     blockChips.style.justifyContent = "center";
@@ -1328,6 +1329,8 @@ function startReihe(){
     };
     paintBlocks();
     setup.appendChild(blockChips);
+  }else{
+    setup.appendChild(el("p", "note", "Bisher ist nur 0 bis 9 freigeschaltet, deshalb wird mit einzelnen Ziffern geübt. Sobald in den Einstellungen ein weiterer Block offen ist, kannst du hier den Bereich wählen."));
   }
 
   const go = el("button", "btn", "Ziffern anzeigen");
