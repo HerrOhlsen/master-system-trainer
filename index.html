@@ -527,7 +527,7 @@ const DEFAULTS = {
   cards: {},              // "12:w2n" -> {box, due, seen, fast}
   custom: {},             // "12" -> {wort, notiz}
   unlocked: [0],          // unlocked blocks of ten
-  settings: {newPerDay: 5, fastMs: 3000, theme: "system"},
+  settings: {newPerDay: 5, fastMs: 3000, theme: "system", reiheBlocks: null},
   stats: {streak: 0, lastDay: "", todayCount: 0, todayDay: "", blitzBest: 0, reiheBest: 0},
 };
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -1281,7 +1281,7 @@ function startReihe(){
   const chips = el("div", "chips");
   chips.style.justifyContent = "center";
   let length = 12;
-  for(const option of [8, 12, 20, 30]){
+  for(const option of [6, 8, 12, 20, 30]){
     const chip = el("button", "chip" + (option === length ? " on" : ""), String(option));
     chip.addEventListener("click", () => {
       length = option;
@@ -1290,6 +1290,46 @@ function startReihe(){
     chips.appendChild(chip);
   }
   setup.appendChild(chips);
+
+  /* Which tens blocks the pairs may be drawn from. Without a stored choice
+     everything unlocked is in play, so the drill widens on its own whenever a
+     new block opens. A stored choice is intersected with what is unlocked, so
+     locking a block again can never smuggle it back into the pool. */
+  const openBlocks = [...state.unlocked].sort((a, b) => a - b);
+  /* 0 to 9 never form pairs, so the picker only offers blocks that actually
+     contribute two digit numbers, unless that is all there is. */
+  const pairBlocks = openBlocks.filter(block => block > 0);
+  const choosable = pairBlocks.length ? pairBlocks : openBlocks;
+  let picked = (state.settings.reiheBlocks || choosable).filter(b => choosable.includes(b));
+  if(!picked.length) picked = [...choosable];
+  if(choosable.length > 1){
+    setup.appendChild(el("p", "muted", "Aus welchem Bereich?"));
+    const blockChips = el("div", "chips");
+    blockChips.style.justifyContent = "center";
+    const paintBlocks = () => {
+      blockChips.textContent = "";
+      for(const block of choosable){
+        const label = `${block * 10}–${block * 10 + 9}`;
+        const chip = el("button", "chip" + (picked.includes(block) ? " on" : ""), label);
+        chip.addEventListener("click", () => {
+          if(picked.includes(block)){
+            if(picked.length === 1){ toast("Mindestens ein Bereich muss an bleiben"); return; }
+            picked = picked.filter(b => b !== block);
+          }else{
+            picked.push(block);
+            picked.sort((a, b) => a - b);
+          }
+          state.settings.reiheBlocks = [...picked];
+          save();
+          paintBlocks();
+        });
+        blockChips.appendChild(chip);
+      }
+    };
+    paintBlocks();
+    setup.appendChild(blockChips);
+  }
+
   const go = el("button", "btn", "Ziffern anzeigen");
   go.addEventListener("click", () => memorize(length));
   setup.appendChild(go);
@@ -1297,13 +1337,18 @@ function startReihe(){
   prompt.appendChild(setup);
 
   function memorize(count){
-    // Only two digit numbers form pairs. As long as just the first block is
-    // unlocked, every single digit gets its own image instead.
-    const unlocked = unlockedNumbers();
-    const twoDigit = unlocked.filter(n => n >= 10);
-    const usePairs = twoDigit.length > 0;
-    const pool = usePairs ? twoDigit : unlocked;
+    /* Pairs are always two digit numbers. The words for 0 to 9 carry a single
+       consonant, so a pair "07" would read back as 7 and shift the rest of the
+       row. Only while nothing but the block of ones is in play does every
+       single digit get its own image. */
+    const usePairs = picked.some(block => block > 0);
     const width = usePairs ? 2 : 1;
+    const pool = [];
+    for(const block of picked){
+      for(let n = block * 10; n < block * 10 + 10; n++){
+        if(!usePairs || n >= 10) pool.push(n);
+      }
+    }
     const pairs = [];
     for(let i = 0; i < count / width; i++){
       pairs.push(pool[Math.floor(Math.random() * pool.length)]);
