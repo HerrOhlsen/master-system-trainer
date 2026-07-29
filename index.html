@@ -878,12 +878,15 @@ function startSession(mode){
   drill.index = 0;
   drill.correct = 0;
   drill.total = 0;
+  const nothingPending = mode === "heute"
+    && !dueCards().length
+    && !newNumbers(state.settings.newPerDay).length;
   drill.queue = buildQueue(mode);
   if(!drill.queue.length){
     toast(mode === "intro" ? "Alle freigeschalteten Zahlen sind schon eingeführt" : "Nichts zu üben, schalte einen Block frei");
     return;
   }
-  $("#drill-title").textContent = ({
+  $("#drill-title").textContent = nothingPending ? "Auffrischen" : ({
     heute: "Heute üben", intro: "Kennenlernen", n2w: "Zahl zu Wort", w2n: "Wort zu Zahl"
   })[mode] || mode;
   show("drill");
@@ -905,7 +908,23 @@ function buildQueue(mode){
     tasks.push({kind: "quiz", number, direction: "n2w"});
   }
   const due = shuffle(dueCards()).map(c => ({kind: "quiz", number: c.number, direction: c.direction}));
-  return tasks.concat(due).slice(0, 45);
+  const queue = tasks.concat(due).slice(0, 45);
+  // Nothing due and nothing new: run a free refresher over the weakest cards
+  // rather than leaving the button dead.
+  return queue.length ? queue : refresherQueue(20);
+}
+function refresherQueue(count){
+  const cards = [];
+  for(const number of unlockedNumbers()){
+    for(const direction of DIRECTIONS){
+      const card = getCard(number, direction);
+      cards.push({number, direction, box: card ? card.box : 0});
+    }
+  }
+  return shuffle(cards)
+    .sort((a, b) => a.box - b.box)      // weakest first, ties stay shuffled
+    .slice(0, count)
+    .map(c => ({kind: "quiz", number: c.number, direction: c.direction}));
 }
 function nextTask(){
   if(drill.index >= drill.queue.length) return finishSession();
