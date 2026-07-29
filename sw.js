@@ -1,5 +1,5 @@
 /* Offline support. Bump CACHE when the app changes so phones pick it up. */
-const CACHE = "master-system-v1";
+const CACHE = "master-system-v2";
 const ASSETS = [
   ".",
   "index.html",

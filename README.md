@@ -58,6 +58,18 @@ kommen in derselben Sitzung noch einmal.
 Der Fortschritt liegt in `localStorage`, pro Gerät. Export und Import als
 JSON-Datei gleichen zwei Geräte ab.
 
+## Darstellung
+
+Hell und dunkel sind zwei Fassungen derselben Idee: Tinte und Messing bei Nacht,
+warmes Papier und Bronze bei Tag. Alle Farben liegen als Tokens in
+`:root[data-theme="dark"]` und `:root[data-theme="light"]`, im Stylesheet steht
+kein fester Farbwert mehr. Ein kleines Skript im `<head>` setzt `data-theme`
+schon vor dem ersten Bildaufbau, damit nichts aufblitzt.
+
+Voreinstellung ist „Automatisch", die App folgt dann dem Systemmodus und
+reagiert auf einen Wechsel im laufenden Betrieb. In den Einstellungen lässt sich
+fest auf hell oder dunkel stellen.
+
 ## Eigene Merkwörter
 
 Stenger empfiehlt ausdrücklich, schlecht sitzende Bilder zu ersetzen. Über das

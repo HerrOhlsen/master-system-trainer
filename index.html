@@ -9,24 +9,85 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>
+/* Resolve the theme before the first paint, so there is no flash of the wrong
+   scheme. Reads the stored settings directly; the app fills in the rest later. */
+(function(){
+  var theme = "dark";
+  try{
+    var stored = JSON.parse(localStorage.getItem("master-system-v1"));
+    var pref = (stored && stored.settings && stored.settings.theme) || "system";
+    theme = pref === "system"
+      ? (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")
+      : pref;
+  }catch(e){}
+  document.documentElement.dataset.theme = theme;
+})();
+</script>
 <style>
 /* ---------------------------------------------------------------- tokens */
 :root{
-  --ink:#12161f;
-  --ink-raised:#1a2130;
-  --ink-sunken:#0d1118;
-  --line:#2b3446;
-  --paper:#efe9dd;
-  --paper-dim:#8e99ab;
-  --brass:#d9a441;
-  --brass-soft:rgba(217,164,65,.14);
-  --sage:#6fae86;
-  --rust:#cf6a52;
   --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Noto Serif",Georgia,serif;
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
   --pad:16px;
   --radius:14px;
+}
+/* Night: ink blue and brass. The digits glow, the page recedes. */
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ink:#12161f;
+  --ink-raised:#1a2130;
+  --ink-sunken:#0d1118;
+  --pressed:#252e40;
+  --line:#2b3446;
+  --paper:#efe9dd;
+  --paper-dim:#8e99ab;
+  --placeholder:#39435a;
+  --brass:#d9a441;
+  --brass-rgb:217,164,65;
+  --on-brass:#191307;
+  --sage:#6fae86;
+  --rust:#cf6a52;
+  --ok-soft:rgba(111,174,134,.16);
+  --bad-soft:rgba(207,106,82,.16);
+  --locked-line:#232c3c;
+  --locked-text:#2f3849;
+  --cell0-bg:#161c28;
+  --cell0-fg:#5a677d;
+  --cell1-fg:#f0e4c8;
+  --cell2-fg:#f0e4c8;
+  --cell3-fg:#f6ecd6;
+  --cell4-fg:#241a08;
+  --cell5-fg:#191307;
+}
+/* Day: warm paper and bronze, the same two voices at different volume. */
+:root[data-theme="light"]{
+  color-scheme:light;
+  --ink:#f6f2e8;
+  --ink-raised:#fffdf7;
+  --ink-sunken:#ebe5d6;
+  --pressed:#e4dccb;
+  --line:#ddd4c1;
+  --paper:#1c2331;
+  --paper-dim:#6c7484;
+  --placeholder:#c3bba9;
+  --brass:#a3701a;
+  --brass-rgb:163,112,26;
+  --on-brass:#fffaf0;
+  --sage:#3d7f56;
+  --rust:#a8442b;
+  --ok-soft:rgba(61,127,86,.14);
+  --bad-soft:rgba(168,68,43,.13);
+  --locked-line:#e2dacb;
+  --locked-text:#c0b8a6;
+  --cell0-bg:#e7e0d0;
+  --cell0-fg:#a79e8b;
+  --cell1-fg:#4c4534;
+  --cell2-fg:#463f2f;
+  --cell3-fg:#3b3527;
+  --cell4-fg:#2e2919;
+  --cell5-fg:#fffaf0;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
@@ -88,10 +149,12 @@ input{font:inherit}
 .today .count.done{color:var(--sage)}
 .btn{
   display:block;width:100%;text-align:center;padding:14px;border-radius:11px;
-  background:var(--brass);color:#191307;font-weight:650;font-size:16px;margin-top:14px
+  background:var(--brass);color:var(--on-brass);font-weight:650;font-size:16px;margin-top:14px
 }
+.btn.danger{background:var(--rust);color:var(--on-brass)}
 .btn:active{transform:scale(.985)}
 .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--paper);font-weight:500}
+.btn.ghost.warn{color:var(--rust);border-color:var(--rust);opacity:.85}
 .btn.quiet{background:var(--ink-raised);color:var(--paper);font-weight:550}
 .btn[disabled]{opacity:.4}
 .streak{
@@ -107,18 +170,22 @@ input{font:inherit}
 .cell{
   aspect-ratio:1;border-radius:4px;display:grid;place-items:center;
   font-family:var(--mono);font-size:10px;
-  background:var(--ink-sunken);color:#3f4a5e;border:1px solid transparent
+  background:var(--cell0-bg);color:var(--cell0-fg);border:1px solid transparent
 }
-.cell[data-box="0"]{background:#161c28;color:#5a677d}
-.cell[data-box="1"]{background:rgba(217,164,65,.13);color:#c9b48a}
-.cell[data-box="2"]{background:rgba(217,164,65,.26);color:#e7d6b0}
-.cell[data-box="3"]{background:rgba(217,164,65,.42);color:#f6ecd6}
-.cell[data-box="4"]{background:rgba(217,164,65,.66);color:#241a08}
-.cell[data-box="5"]{background:var(--brass);color:#191307;font-weight:600}
-.cell.locked{background:transparent;border:1px dashed #232c3c;color:#2f3849}
+.cell[data-box="0"]{background:var(--cell0-bg);color:var(--cell0-fg)}
+.cell[data-box="1"]{background:rgba(var(--brass-rgb),.15);color:var(--cell1-fg)}
+.cell[data-box="2"]{background:rgba(var(--brass-rgb),.29);color:var(--cell2-fg)}
+.cell[data-box="3"]{background:rgba(var(--brass-rgb),.46);color:var(--cell3-fg)}
+.cell[data-box="4"]{background:rgba(var(--brass-rgb),.68);color:var(--cell4-fg)}
+.cell[data-box="5"]{background:var(--brass);color:var(--cell5-fg);font-weight:600}
+.cell.locked{background:transparent;border:1px dashed var(--locked-line);color:var(--locked-text)}
 .cell.due{box-shadow:inset 0 0 0 1.5px var(--paper)}
 .legend{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;color:var(--paper-dim)}
-.legend i{width:13px;height:13px;border-radius:3px;display:inline-block}
+.legend i{width:13px;height:13px;border-radius:3px;display:inline-block;background:var(--cell0-bg)}
+.legend i.b1{background:rgba(var(--brass-rgb),.29)}
+.legend i.b2{background:rgba(var(--brass-rgb),.46)}
+.legend i.b3{background:rgba(var(--brass-rgb),.68)}
+.legend i.b4{background:var(--brass)}
 
 /* --------------------------------------------------------------- menu */
 .menu{border-top:1px solid var(--line)}
@@ -158,8 +225,8 @@ input{font:inherit}
   padding:15px 10px;border:1px solid var(--line);border-radius:11px;background:var(--ink-raised);
   font-family:var(--serif);font-size:19px;text-align:center
 }
-.opt.right{border-color:var(--sage);background:rgba(111,174,134,.16)}
-.opt.wrong{border-color:var(--rust);background:rgba(207,106,82,.16)}
+.opt.right{border-color:var(--sage);background:var(--ok-soft)}
+.opt.wrong{border-color:var(--rust);background:var(--bad-soft)}
 .opt.dim{opacity:.45}
 
 /* numeric keypad */
@@ -167,15 +234,15 @@ input{font:inherit}
   font-family:var(--mono);font-size:40px;text-align:center;letter-spacing:.14em;
   min-height:52px;margin-bottom:14px
 }
-.entry .ph{color:#39435a}
+.entry .ph{color:var(--placeholder)}
 .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .key{
   padding:16px 0;border-radius:11px;background:var(--ink-raised);border:1px solid var(--line);
   font-family:var(--mono);font-size:23px;text-align:center
 }
-.key:active{background:#252e40}
+.key:active{background:var(--pressed)}
 .key.wide{grid-column:span 1}
-.key.act{background:var(--brass);color:#191307;border-color:var(--brass);font-family:var(--sans);font-size:16px;font-weight:650}
+.key.act{background:var(--brass);color:var(--on-brass);border-color:var(--brass);font-family:var(--sans);font-size:16px;font-weight:650}
 .key.sub{font-family:var(--sans);font-size:15px;color:var(--paper-dim)}
 
 /* feedback */
@@ -223,7 +290,7 @@ input{font:inherit}
   padding:8px 13px;border-radius:999px;border:1px solid var(--line);
   font-family:var(--mono);font-size:13px;color:var(--paper-dim)
 }
-.chip.on{background:var(--brass);color:#191307;border-color:var(--brass);font-weight:600}
+.chip.on{background:var(--brass);color:var(--on-brass);border-color:var(--brass);font-weight:600}
 .digits{
   font-family:var(--mono);font-size:clamp(26px,8vw,38px);letter-spacing:.08em;
   text-align:center;word-spacing:.5em;line-height:1.7
@@ -283,11 +350,7 @@ input{font:inherit}
       <div class="grid100" id="grid"></div>
       <div class="legend">
         <span>neu</span>
-        <i style="background:#161c28"></i>
-        <i style="background:rgba(217,164,65,.26)"></i>
-        <i style="background:rgba(217,164,65,.42)"></i>
-        <i style="background:rgba(217,164,65,.66)"></i>
-        <i style="background:var(--brass)"></i>
+        <i></i><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i>
         <span>sitzt</span>
         <span style="margin-left:auto">tippen für Details</span>
       </div>
@@ -357,6 +420,10 @@ input{font:inherit}
       <h1>Einstellungen</h1>
     </div>
 
+    <div class="section-title" style="margin-top:8px">Darstellung</div>
+    <div class="chips" id="set-theme"></div>
+
+    <div class="section-title">Lernen</div>
     <div class="field">
       <label for="set-new">Neue Zahlen pro Tag</label>
       <input id="set-new" class="num-in" type="number" min="1" max="20" inputmode="numeric">
@@ -378,7 +445,7 @@ input{font:inherit}
       <button class="btn quiet" id="btn-import">Importieren</button>
     </div>
     <input type="file" id="import-file" accept="application/json,.json" hidden>
-    <button class="btn ghost" id="btn-reset" style="margin-top:24px;color:var(--rust);border-color:rgba(207,106,82,.4)">Lernstand zurücksetzen</button>
+    <button class="btn ghost warn" id="btn-reset" style="margin-top:24px">Lernstand zurücksetzen</button>
     <p class="note" style="margin-top:26px">
       Merkwörter und Visualisierungen nach Christiane Stenger, „Warum fällt das Schaf vom Baum?“.
     </p>
@@ -460,7 +527,7 @@ const DEFAULTS = {
   cards: {},              // "12:w2n" -> {box, due, seen, fast}
   custom: {},             // "12" -> {wort, notiz}
   unlocked: [0],          // unlocked blocks of ten
-  settings: {newPerDay: 5, fastMs: 3000},
+  settings: {newPerDay: 5, fastMs: 3000, theme: "system"},
   stats: {streak: 0, lastDay: "", todayCount: 0, todayDay: "", blitzBest: 0, reiheBest: 0},
 };
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -564,6 +631,26 @@ function bumpToday(){
     state.stats.lastDay = day;
   }
 }
+
+/* ================================================================ theme */
+const THEMES = [["system", "Automatisch"], ["light", "Hell"], ["dark", "Dunkel"]];
+const prefersLight = window.matchMedia("(prefers-color-scheme: light)");
+
+function resolvedTheme(){
+  const pref = state.settings.theme || "system";
+  if(pref !== "system") return pref;
+  return prefersLight.matches ? "light" : "dark";
+}
+function applyTheme(){
+  const theme = resolvedTheme();
+  document.documentElement.dataset.theme = theme;
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.content = theme === "light" ? "#f6f2e8" : "#12161f";
+}
+/* Follow the system while it is set to automatic. */
+prefersLight.addEventListener("change", () => {
+  if((state.settings.theme || "system") === "system") applyTheme();
+});
 
 /* ============================================================== helpers */
 const $ = sel => document.querySelector(sel);
@@ -1408,6 +1495,19 @@ function renderListe(){
 
 /* ============================================================ settings */
 function renderSettings(){
+  const themeWrap = $("#set-theme");
+  themeWrap.textContent = "";
+  for(const [value, caption] of THEMES){
+    const chip = el("button", "chip" + ((state.settings.theme || "system") === value ? " on" : ""), caption);
+    chip.style.fontFamily = "var(--sans)";
+    chip.addEventListener("click", () => {
+      state.settings.theme = value;
+      save();
+      applyTheme();
+      renderSettings();
+    });
+    themeWrap.appendChild(chip);
+  }
   $("#set-new").value = state.settings.newPerDay;
   $("#set-fast").value = (state.settings.fastMs / 1000);
   const wrap = $("#set-blocks");
@@ -1452,6 +1552,7 @@ function importState(file){
         stats: Object.assign({}, DEFAULTS.stats, incoming.stats || {}),
       });
       save();
+      applyTheme();
       renderSettings();
       renderHome();
       toast("Übernommen");
@@ -1532,11 +1633,11 @@ $("#btn-reset").addEventListener("click", () => {
     sheet.appendChild(el("p", null, "Lernstand wirklich zurücksetzen?"));
     sheet.appendChild(el("p", "note", "Eigene Merkwörter, Notizen und alle Fächer werden gelöscht. Das lässt sich nicht rückgängig machen."));
     const buttons = el("div", "rowbtns");
-    const yes = el("button", "btn", "Löschen");
-    yes.style.background = "var(--rust)";
+    const yes = el("button", "btn danger", "Löschen");
     yes.addEventListener("click", () => {
       state = clone(DEFAULTS);
       save();
+      applyTheme();
       renderSettings();
       renderHome();
       closeSheet();
@@ -1560,6 +1661,7 @@ document.addEventListener("keydown", event => {
   }
 });
 
+applyTheme();
 renderHome();
 
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){
