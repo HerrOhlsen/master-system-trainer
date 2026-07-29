@@ -18,7 +18,10 @@ from docx.shared import Cm, Pt
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mastersystem  # noqa: E402
 
-OUTPUT = Path(r"C:\Users\malte\OneDrive\Claude files\Gedächntistraining") / "master-system-spickzettel.docx"
+# Next to the repository by default, so the sheet lands beside the source book.
+# Pass a different path as the first argument to override.
+ROOT = Path(__file__).resolve().parent.parent
+OUTPUT = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT.parent / "master-system-spickzettel.docx"
 
 FONT = "Calibri"
 SHADE_BLOCK = "EAEAEA"
