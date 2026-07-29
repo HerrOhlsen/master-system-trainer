@@ -1,0 +1,16 @@
+{
+  "name": "Master-System",
+  "short_name": "Master-System",
+  "description": "Merkwörter für die Zahlen 0 bis 99 automatisieren",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#12161f",
+  "theme_color": "#12161f",
+  "lang": "de",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

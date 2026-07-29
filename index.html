@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12161f">
+<title>Master-System</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+/* ---------------------------------------------------------------- tokens */
+:root{
+  --ink:#12161f;
+  --ink-raised:#1a2130;
+  --ink-sunken:#0d1118;
+  --line:#2b3446;
+  --paper:#efe9dd;
+  --paper-dim:#8e99ab;
+  --brass:#d9a441;
+  --brass-soft:rgba(217,164,65,.14);
+  --sage:#6fae86;
+  --rust:#cf6a52;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Noto Serif",Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
+  --pad:16px;
+  --radius:14px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ink);
+  color:var(--paper);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.45;
+  overscroll-behavior-y:contain;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input{font:inherit}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+
+/* ---------------------------------------------------------------- shell */
+#app{max-width:520px;margin:0 auto;padding:0 var(--pad) 40px}
+.topbar{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 0 10px;position:sticky;top:0;z-index:20;
+  background:linear-gradient(var(--ink) 72%,transparent);
+}
+.topbar h1{
+  font-family:var(--serif);font-size:20px;font-weight:600;margin:0;
+  letter-spacing:.01em;flex:1
+}
+.topbar .back{
+  font-size:15px;color:var(--paper-dim);padding:6px 10px 6px 0;margin-left:-4px
+}
+.icon-btn{
+  width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  color:var(--paper-dim);font-size:18px
+}
+.icon-btn:hover{background:var(--ink-raised);color:var(--paper)}
+.view{display:none;animation:rise .22s ease}
+.view.active{display:block}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ---------------------------------------------------------------- type */
+.eyebrow{
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--paper-dim);font-weight:600
+}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.word{font-family:var(--serif)}
+/* the signature: consonants carry the digits, vowels are only filler */
+.word .k{color:var(--paper);font-weight:600}
+.word .v{color:var(--paper-dim);font-weight:400}
+.muted{color:var(--paper-dim)}
+.small{font-size:13px}
+
+/* ------------------------------------------------------------ home card */
+.today{
+  background:var(--ink-raised);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px;margin-bottom:22px;position:relative;overflow:hidden
+}
+.today .count{font-family:var(--mono);font-size:44px;line-height:1;margin:6px 0 2px}
+.today .count.done{color:var(--sage)}
+.btn{
+  display:block;width:100%;text-align:center;padding:14px;border-radius:11px;
+  background:var(--brass);color:#191307;font-weight:650;font-size:16px;margin-top:14px
+}
+.btn:active{transform:scale(.985)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--paper);font-weight:500}
+.btn.quiet{background:var(--ink-raised);color:var(--paper);font-weight:550}
+.btn[disabled]{opacity:.4}
+.streak{
+  display:flex;gap:16px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);
+  font-size:13px;color:var(--paper-dim)
+}
+.streak b{display:block;font-family:var(--mono);font-size:17px;color:var(--paper);font-weight:500}
+
+/* ---------------------------------------------------------------- grid */
+.gridwrap{margin-bottom:24px}
+.gridhead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:9px}
+.grid100{display:grid;grid-template-columns:repeat(10,1fr);gap:3px}
+.cell{
+  aspect-ratio:1;border-radius:4px;display:grid;place-items:center;
+  font-family:var(--mono);font-size:10px;
+  background:var(--ink-sunken);color:#3f4a5e;border:1px solid transparent
+}
+.cell[data-box="0"]{background:#161c28;color:#5a677d}
+.cell[data-box="1"]{background:rgba(217,164,65,.13);color:#c9b48a}
+.cell[data-box="2"]{background:rgba(217,164,65,.26);color:#e7d6b0}
+.cell[data-box="3"]{background:rgba(217,164,65,.42);color:#f6ecd6}
+.cell[data-box="4"]{background:rgba(217,164,65,.66);color:#241a08}
+.cell[data-box="5"]{background:var(--brass);color:#191307;font-weight:600}
+.cell.locked{background:transparent;border:1px dashed #232c3c;color:#2f3849}
+.cell.due{box-shadow:inset 0 0 0 1.5px var(--paper)}
+.legend{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;color:var(--paper-dim)}
+.legend i{width:13px;height:13px;border-radius:3px;display:inline-block}
+
+/* --------------------------------------------------------------- menu */
+.menu{border-top:1px solid var(--line)}
+.menu button{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  padding:15px 2px;border-bottom:1px solid var(--line)
+}
+.menu .t{flex:1}
+.menu .t small{display:block;color:var(--paper-dim);font-size:12.5px;margin-top:1px}
+.menu .chev{color:var(--paper-dim)}
+.menu .badge{font-family:var(--mono);font-size:12px;color:var(--brass)}
+
+/* -------------------------------------------------------------- drill */
+.progressbar{height:3px;background:var(--line);border-radius:2px;overflow:hidden;margin-bottom:26px}
+.progressbar i{display:block;height:100%;background:var(--brass);transition:width .3s ease}
+.stage{min-height:min(56vh,420px);display:flex;flex-direction:column}
+.prompt{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:10px 0 20px}
+.prompt .ask{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--paper-dim);margin-bottom:18px}
+.bignum{font-family:var(--mono);font-size:clamp(64px,22vw,104px);line-height:1;letter-spacing:.04em;font-weight:500}
+.bigword{font-family:var(--serif);font-size:clamp(38px,12vw,58px);line-height:1.1}
+.reveal{animation:rise .25s ease}
+
+/* consonant breakdown under a word */
+.breakdown{display:flex;justify-content:center;align-items:flex-end;gap:1px;margin-top:14px;flex-wrap:wrap}
+.seg{display:flex;flex-direction:column;align-items:center;min-width:14px}
+.seg .letters{font-family:var(--serif);font-size:26px;line-height:1.1}
+.seg .d{font-family:var(--mono);font-size:12px;margin-top:3px;color:var(--brass)}
+.breakdown.large{margin-top:22px}
+.breakdown.large .letters{font-size:clamp(34px,10vw,46px)}
+.breakdown.large .d{font-size:15px;margin-top:6px}
+.seg.vowel .letters{color:var(--paper-dim)}
+.seg.vowel .d{color:transparent}
+
+/* answer options */
+.options{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opt{
+  padding:15px 10px;border:1px solid var(--line);border-radius:11px;background:var(--ink-raised);
+  font-family:var(--serif);font-size:19px;text-align:center
+}
+.opt.right{border-color:var(--sage);background:rgba(111,174,134,.16)}
+.opt.wrong{border-color:var(--rust);background:rgba(207,106,82,.16)}
+.opt.dim{opacity:.45}
+
+/* numeric keypad */
+.entry{
+  font-family:var(--mono);font-size:40px;text-align:center;letter-spacing:.14em;
+  min-height:52px;margin-bottom:14px
+}
+.entry .ph{color:#39435a}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.key{
+  padding:16px 0;border-radius:11px;background:var(--ink-raised);border:1px solid var(--line);
+  font-family:var(--mono);font-size:23px;text-align:center
+}
+.key:active{background:#252e40}
+.key.wide{grid-column:span 1}
+.key.act{background:var(--brass);color:#191307;border-color:var(--brass);font-family:var(--sans);font-size:16px;font-weight:650}
+.key.sub{font-family:var(--sans);font-size:15px;color:var(--paper-dim)}
+
+/* feedback */
+.verdict{text-align:center;padding:6px 0 14px;min-height:30px}
+.verdict.right{color:var(--sage)}
+.verdict.wrong{color:var(--rust)}
+.verdict .ms{font-family:var(--mono);font-size:12px;color:var(--paper-dim);display:block;margin-top:2px}
+.selfcheck{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.hintline{text-align:center;font-size:13px;color:var(--paper-dim);margin-top:14px;min-height:20px}
+.imglist{margin:14px 0 0;padding:0;list-style:none;text-align:left}
+.imglist li{
+  font-size:14px;color:var(--paper-dim);padding:7px 0 7px 14px;border-left:1px solid var(--line);
+  margin-bottom:2px
+}
+.imglist li:first-child{color:var(--paper)}
+
+/* ---------------------------------------------------------------- sheet */
+.sheet-back{
+  position:fixed;inset:0;background:rgba(6,8,12,.7);z-index:40;display:none;
+  align-items:flex-end;justify-content:center
+}
+.sheet-back.open{display:flex}
+.sheet{
+  background:var(--ink-raised);border-top-left-radius:20px;border-top-right-radius:20px;
+  width:100%;max-width:520px;max-height:86vh;overflow-y:auto;padding:8px var(--pad) 28px;
+  animation:slideup .24s ease;border-top:1px solid var(--line)
+}
+@keyframes slideup{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+.grip{width:38px;height:4px;border-radius:2px;background:var(--line);margin:6px auto 14px}
+.field{margin-top:16px}
+.field label{display:block;font-size:12.5px;color:var(--paper-dim);margin-bottom:6px}
+.field input{
+  width:100%;padding:12px;border-radius:10px;background:var(--ink-sunken);
+  border:1px solid var(--line);color:var(--paper);font-family:var(--serif);font-size:17px
+}
+.field input.num-in{font-family:var(--mono)}
+.rowbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}
+.note{font-size:13px;color:var(--paper-dim);margin-top:10px}
+.note.warn{color:var(--brass)}
+
+/* ------------------------------------------------------------- misc */
+.section-title{font-family:var(--serif);font-size:17px;margin:26px 0 10px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px}
+.chip{
+  padding:8px 13px;border-radius:999px;border:1px solid var(--line);
+  font-family:var(--mono);font-size:13px;color:var(--paper-dim)
+}
+.chip.on{background:var(--brass);color:#191307;border-color:var(--brass);font-weight:600}
+.digits{
+  font-family:var(--mono);font-size:clamp(26px,8vw,38px);letter-spacing:.08em;
+  text-align:center;word-spacing:.5em;line-height:1.7
+}
+.digits .pair{display:inline-block;margin:0 .18em}
+.digits .pair.ok{color:var(--sage)}
+.digits .pair.bad{color:var(--rust);text-decoration:line-through}
+.chain{margin:18px 0 0;padding:0;list-style:none}
+.chain li{
+  display:flex;gap:12px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--line)
+}
+.chain .n{font-family:var(--mono);color:var(--brass);font-size:14px;min-width:26px}
+.chain .w{font-family:var(--serif);font-size:19px}
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%);
+  background:var(--paper);color:var(--ink);padding:11px 18px;border-radius:999px;
+  font-size:14px;font-weight:550;z-index:60;opacity:0;pointer-events:none;transition:opacity .25s
+}
+.toast.show{opacity:1}
+.tablelist{width:100%;border-collapse:collapse;font-size:15px}
+.tablelist td{padding:9px 4px;border-bottom:1px solid var(--line);vertical-align:baseline}
+.tablelist td.n{font-family:var(--mono);color:var(--brass);width:44px}
+.tablelist td.w{font-family:var(--serif);font-size:17px}
+.tablelist td.a{font-family:var(--serif);color:var(--paper-dim);font-size:13px;text-align:right}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- ============================================================= HOME -->
+  <section id="view-home" class="view active">
+    <div class="topbar">
+      <h1>Master-System</h1>
+      <button class="icon-btn" id="btn-settings" aria-label="Einstellungen">☰</button>
+    </div>
+
+    <div class="today">
+      <div class="eyebrow">Heute</div>
+      <div class="count num" id="due-count">0</div>
+      <div class="small muted" id="due-label">Karten fällig</div>
+      <button class="btn" id="btn-practice">Üben</button>
+      <div class="streak">
+        <div><b class="num" id="stat-streak">0</b>Tage in Folge</div>
+        <div><b class="num" id="stat-today">0</b>heute beantwortet</div>
+        <div><b class="num" id="stat-mastered">0</b>von 100 sitzen</div>
+      </div>
+    </div>
+
+    <div class="gridwrap">
+      <div class="gridhead">
+        <span class="eyebrow">Dein Stand</span>
+        <button class="small muted" id="btn-unlock" style="font-family:var(--sans)">Block freischalten</button>
+      </div>
+      <div class="grid100" id="grid"></div>
+      <div class="legend">
+        <span>neu</span>
+        <i style="background:#161c28"></i>
+        <i style="background:rgba(217,164,65,.26)"></i>
+        <i style="background:rgba(217,164,65,.42)"></i>
+        <i style="background:rgba(217,164,65,.66)"></i>
+        <i style="background:var(--brass)"></i>
+        <span>sitzt</span>
+        <span style="margin-left:auto">tippen für Details</span>
+      </div>
+    </div>
+
+    <div class="eyebrow" style="margin-bottom:6px">Gezielt üben</div>
+    <div class="menu">
+      <button data-mode="intro"><span class="t">Kennenlernen<small>Neue Zahlen mit Bild und Herleitung</small></span><span class="chev">›</span></button>
+      <button data-mode="n2w"><span class="t">Zahl zu Wort<small>Welches Bild gehört zur Zahl?</small></span><span class="chev">›</span></button>
+      <button data-mode="w2n"><span class="t">Wort zu Zahl<small>Die Richtung, die du beim Abrufen brauchst</small></span><span class="chev">›</span></button>
+      <button data-mode="blitz"><span class="t">Blitz<small>60 Sekunden, gemischt</small></span><span class="badge num" id="blitz-best"></span><span class="chev">›</span></button>
+      <button data-mode="reihe"><span class="t">Zahlenreihe merken<small>Der eigentliche Zweck des Systems</small></span><span class="chev">›</span></button>
+      <button data-mode="werkstatt"><span class="t">Konsonanten-Werkstatt<small>Regel drillen und eigene Wörter prüfen</small></span><span class="chev">›</span></button>
+      <button data-mode="liste"><span class="t">Alle Merkwörter<small>Nachschlagen</small></span><span class="chev">›</span></button>
+    </div>
+  </section>
+
+  <!-- ============================================================ DRILL -->
+  <section id="view-drill" class="view">
+    <div class="topbar">
+      <button class="back" id="drill-back">‹ Zurück</button>
+      <h1 id="drill-title" style="font-size:15px;font-family:var(--sans);color:var(--paper-dim);text-align:right"></h1>
+    </div>
+    <div class="progressbar"><i id="drill-progress" style="width:0"></i></div>
+    <div class="stage">
+      <div class="prompt" id="drill-prompt"></div>
+      <div class="verdict" id="drill-verdict"></div>
+      <div id="drill-answer"></div>
+      <div class="hintline" id="drill-hint"></div>
+    </div>
+  </section>
+
+  <!-- ========================================================== WERKSTATT -->
+  <section id="view-werkstatt" class="view">
+    <div class="topbar">
+      <button class="back" id="werk-back">‹ Zurück</button>
+      <h1>Werkstatt</h1>
+    </div>
+    <p class="small muted" style="margin-top:0">
+      Tippe ein beliebiges Wort ein. Die Werkstatt zerlegt es in Konsonanten und zeigt, welche Zahl darin steckt.
+      So prüfst du eigene Merkwörter.
+    </p>
+    <div class="field">
+      <label for="werk-input">Wort</label>
+      <input id="werk-input" type="text" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Schaf">
+    </div>
+    <div id="werk-out" style="margin-top:22px"></div>
+
+    <div class="section-title">Die Zuordnung</div>
+    <table class="tablelist" id="werk-table"></table>
+    <button class="btn ghost" id="werk-drill" style="margin-top:20px">Ziffern drillen</button>
+  </section>
+
+  <!-- ============================================================= LISTE -->
+  <section id="view-liste" class="view">
+    <div class="topbar">
+      <button class="back" id="liste-back">‹ Zurück</button>
+      <h1>Merkwörter</h1>
+    </div>
+    <table class="tablelist" id="liste-table"></table>
+  </section>
+
+  <!-- ========================================================== SETTINGS -->
+  <section id="view-settings" class="view">
+    <div class="topbar">
+      <button class="back" id="set-back">‹ Zurück</button>
+      <h1>Einstellungen</h1>
+    </div>
+
+    <div class="field">
+      <label for="set-new">Neue Zahlen pro Tag</label>
+      <input id="set-new" class="num-in" type="number" min="1" max="20" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label for="set-fast">Als schnell zählt eine Antwort unter (Sekunden)</label>
+      <input id="set-fast" class="num-in" type="number" min="1" max="15" step="0.5" inputmode="decimal">
+    </div>
+    <p class="note">Nur schnelle richtige Antworten steigen ins nächste Fach. Richtig, aber langsam, hält die Karte auf ihrem Stand.</p>
+
+    <div class="section-title">Freigeschaltet</div>
+    <div class="chips" id="set-blocks"></div>
+    <p class="note">Tippe einen Block an, um ihn frei- oder wieder abzuschalten. Nur freigeschaltete Zahlen werden abgefragt.</p>
+
+    <div class="section-title">Sichern und übertragen</div>
+    <p class="note">Der Fortschritt liegt nur in diesem Browser. Der Export enthält eure eigenen Merkwörter, Notizen und den Lernstand.</p>
+    <div class="rowbtns">
+      <button class="btn quiet" id="btn-export">Exportieren</button>
+      <button class="btn quiet" id="btn-import">Importieren</button>
+    </div>
+    <input type="file" id="import-file" accept="application/json,.json" hidden>
+    <button class="btn ghost" id="btn-reset" style="margin-top:24px;color:var(--rust);border-color:rgba(207,106,82,.4)">Lernstand zurücksetzen</button>
+    <p class="note" style="margin-top:26px">
+      Merkwörter und Visualisierungen nach Christiane Stenger, „Warum fällt das Schaf vom Baum?“.
+    </p>
+  </section>
+</div>
+
+<!-- ============================================================== SHEET -->
+<div class="sheet-back" id="sheet-back">
+  <div class="sheet" id="sheet"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- DATA:START -->
+<script id="master-data" type="application/json">{"quelle":"Christiane Stenger: Warum fällt das Schaf vom Baum? Kapitel 'Das Master-System'","regeln":["Konsonanten tragen die Ziffern, Vokale sind frei und dienen nur dazu, sinnvolle Wörter zu bilden.","Doppelkonsonanten zählen nur einmal: 'Tanne' ist 12, nicht 122.","Vergessene Merkwörter lassen sich rekonstruieren: Konsonanten hinschreiben, dann Vokale der Reihe nach durchprobieren (a, e, i, o, u, dann au, ei, eu, ö, ü).","Merkwörter sind austauschbar. Wenn ein Bild nicht sitzt, ersetze es durch ein eigenes.","Jedes Wort immer als konkretes Bild vorstellen, nicht als Buchstabenfolge. Farben, Gerüche und Gefühle machen es haltbar."],"konsonanten":[{"ziffer":0,"buchstaben":["s","z","ß"],"anzeige":"s","eselsbruecke":"Zero heißt im Spanischen/Italienischen Null, das Z wird wie ein S ausgesprochen.","merkwort":"Sau"},{"ziffer":1,"buchstaben":["t","d"],"anzeige":"t, d","eselsbruecke":"Der Buchstabe t sieht aus wie 1.","merkwort":"Tee"},{"ziffer":2,"buchstaben":["n"],"anzeige":"n","eselsbruecke":"Das n hat zwei Beine.","merkwort":"Noah"},{"ziffer":3,"buchstaben":["m"],"anzeige":"m","eselsbruecke":"Das m sieht aus wie eine auf den Bauch gefallene 3 und hat außerdem drei Beine.","merkwort":"Mai"},{"ziffer":4,"buchstaben":["r"],"anzeige":"r","eselsbruecke":"Im Wort vier steckt das r.","merkwort":"Reh"},{"ziffer":5,"buchstaben":["l"],"anzeige":"l","eselsbruecke":"Das L ist im Lateinischen das Symbol für 50.","merkwort":"Lee"},{"ziffer":6,"buchstaben":["sch","ch"],"anzeige":"sch, ch","eselsbruecke":"Mit 6 geht man in die Schule.","merkwort":"Schuh"},{"ziffer":7,"buchstaben":["k","c","g"],"anzeige":"k","eselsbruecke":"Am 7. Tag geht man in die Kirche.","merkwort":"Kuh"},{"ziffer":8,"buchstaben":["f","v","w"],"anzeige":"f, v, w","eselsbruecke":"Das w ist ein doppeltes v, so wie die 8 eine doppelte Null ist.","merkwort":"Fee"},{"ziffer":9,"buchstaben":["p","b"],"anzeige":"p, b","eselsbruecke":"Die 9 ist das Spiegelbild eines großen P.","merkwort":"Po"}],"eintraege":[{"zahl":0,"wort":"Sau","alternativen":[],"bilder":["bunt bemaltes Sparschwein aus Kindertagen","quiekendes Ferkel, das du im Arm hältst und das herunterspringen will","Rennschwein Rudi Rüssel aus dem gleichnamigen Film","Ferkel im Gespräch mit Pu aus dem Kinderbuch Pu der Bär"]},{"zahl":1,"wort":"Tee","alternativen":[],"bilder":["dampfende Teetasse","Teepflückerin mit einem großen Korb auf dem Rücken","das Abschlagstee beim Golfen"]},{"zahl":2,"wort":"Noah","alternativen":[],"bilder":["alter Mann, der sich auf einen Stock stützt","zwei Elefanten, die ihre Rüssel miteinander verschlungen haben","Tiere, die paarweise auf ein Schiff zugehen"]},{"zahl":3,"wort":"Mai","alternativen":[],"bilder":["untergehende Sonne an einem noch kühlen, windigen Abend am Strand","duftende Maiglöckchen","ein Freund, der im Mai Geburtstag hat"]},{"zahl":4,"wort":"Reh","alternativen":[],"bilder":["Bambi aus dem Walt-Disney-Film, das dich mit seinen großen Augen anschaut","Reh im Wald"]},{"zahl":5,"wort":"Lee","alternativen":[],"bilder":["deine Lieblingsjeans (Jeansmarke Lee)","ein Foto von Lee Oswald, der John F. Kennedy ermordet haben soll"]},{"zahl":6,"wort":"Schuh","alternativen":[],"bilder":["spitze Schnabelschuhe wie aus einem Märchen aus 1001 Nacht","dein viel zu teurer Traumschuh","Aschenputtel, das den Schuh probiert"]},{"zahl":7,"wort":"Kuh","alternativen":[],"bilder":["lila Kuh","schwarz-weiße Kuh auf einer mit Löwenzahn übersäten Weide","frisch geborenes Kälbchen"]},{"zahl":8,"wort":"Fee","alternativen":[],"bilder":["die Fee deiner Träume"]},{"zahl":9,"wort":"Po","alternativen":["Pu"],"bilder":["Kinderpopo","Pu: Pu der Bär mit Honigglas"]},{"zahl":10,"wort":"Tasse","alternativen":[],"bilder":["deine Lieblingstasse, die gerade auf dem Boden zerbrochen ist"]},{"zahl":11,"wort":"Tod","alternativen":["Tat","Tüte"],"bilder":["Skelett","schwarzer Sensenmann","Tat: Pfadfinder, der eine gute Tat begeht","Tüte: bunte Tüte aus Weihnachtspapier"]},{"zahl":12,"wort":"Tanne","alternativen":["Tonne","Tenno"],"bilder":["Weihnachtsbaum (Achtung: 93 ist Baum)","Tannengruppe in deiner Umgebung","Tonne: Papiertonne oder Papierkorb","Tenno: Foto des japanischen Kaisers"]},{"zahl":13,"wort":"Team","alternativen":["Dame","Damm"],"bilder":["Foto einer Fußballmannschaft (Achtung: 83 ist WM)","Dame: Dame deiner Wahl","Damm: Erinnerung an den Spaziergang auf dem Damm entlang eines Flusses"]},{"zahl":14,"wort":"Teer","alternativen":[],"bilder":["Eimer mit Teer","Routenpunkt wird schwarz","Straßenwalze"]},{"zahl":15,"wort":"Tal","alternativen":[],"bilder":["die eigene Vorstellung von einem Blick in ein wunderschönes Tal","Gletscher, der ins Tal fließt"]},{"zahl":16,"wort":"Tasche","alternativen":[],"bilder":["bunte Sporttasche","deine Lieblingshandtasche"]},{"zahl":17,"wort":"Theke","alternativen":[],"bilder":["Theke in deiner Lieblingskneipe","Küchentheke","Ausschank im Biergarten"]},{"zahl":18,"wort":"Taufe","alternativen":["Tofu"],"bilder":["altmodischer Kinderwagen","Baby","Taufbecken","Tofu: dein Lieblingsgericht mit Tofu"]},{"zahl":19,"wort":"Taube","alternativen":[],"bilder":["Bild von Picasso","Taube mit Palmzweig im Schnabel","Friedenszeichen Peace"]},{"zahl":20,"wort":"Nase","alternativen":[],"bilder":["eine markante Nase eines Bekannten oder Freundes","ein besonders neugieriger Freund, dessen Nase den betreffenden Routenpunkt beschnuppert","die zitternde Nase eines Kaninchens"]},{"zahl":21,"wort":"Note","alternativen":["Naht"],"bilder":["Schulzeugnis und das damit verbundene mulmige Gefühl oder die Freude","Notenblatt","Erinnerung an die beste oder schlechteste Klausur","Naht: Faltenrock"]},{"zahl":22,"wort":"Nonne","alternativen":[],"bilder":["Whoopi Goldberg im Film Sister Act","Nonne auf einem Fahrrad"]},{"zahl":23,"wort":"Name","alternativen":["Nemo"],"bilder":["Stempel mit deinem Namen, den du auf ein rosa Blatt Papier drückst","Lichtprojektion deiner Unterschrift","Nemo: Käpt'n Nemo"]},{"zahl":24,"wort":"Narr","alternativen":[],"bilder":["du in einem bunten Harlekinkostüm","Narrenkappe mit klingenden Glöckchen","Clown, den du bei deinem letzten Zirkusbesuch erlebt hast"]},{"zahl":25,"wort":"Nil","alternativen":[],"bilder":["Nilpferd, das aus dem Wasser schaut und mit seinen kleinen Ohren wackelt","Fluss mit Palmen"]},{"zahl":26,"wort":"Nische","alternativen":[],"bilder":["eine in einer Nische stehende Madonna","der betreffende Routenpunkt wird ganz klein"]},{"zahl":27,"wort":"Nike","alternativen":["Nokia"],"bilder":["Nike-Zeichen","dein Lieblingsturnschuh","Nokia: dein eigenes Handy, das gerade klingelt"]},{"zahl":28,"wort":"Neffe","alternativen":[],"bilder":["ein kleiner Junge mit lachendem Gesicht","einer deiner Neffen"]},{"zahl":29,"wort":"Neubau","alternativen":["Nappa"],"bilder":["ein auffälliger Neubau in deiner Umgebung","Kuppel des Berliner Reichstags, hell beleuchtet bei Nacht","Nappa: deine Lieblingshandtasche aus Nappaleder"]},{"zahl":30,"wort":"Moos","alternativen":["Maus"],"bilder":["Waldboden mit Moos","Osterdekoration","Münzen: ohne Moos nichts los","Maus: Maus, die mit einer Rolltreppe auf den Routenpunkt fährt"]},{"zahl":31,"wort":"Matte","alternativen":[],"bilder":["Kunstturner auf einer Turnmatte","Fußbodenmatte vor deiner Wohnungstür"]},{"zahl":32,"wort":"Mann","alternativen":[],"bilder":["ein Mann deiner Wahl"]},{"zahl":33,"wort":"Mama","alternativen":[],"bilder":["Mama ist Mama"]},{"zahl":34,"wort":"Meer","alternativen":[],"bilder":["dein Traumstrand mit heftiger, tosender Brandung oder kristallklarem, smaragdgrünem Wasser","Eimer, der mit Meerwasser und Quallen gefüllt ist","große Muschel, in der man das Meeresrauschen hören kann"]},{"zahl":35,"wort":"Mehl","alternativen":[],"bilder":["Mehlsack","Windmühle","der Mehltopf in deiner Küche"]},{"zahl":36,"wort":"Masche","alternativen":[],"bilder":["ein selbst gehäkelter, blau-roter Topflappen","Routenpunkt wird weich, als ob er gestrickt wäre","schwarzer Strumpf an einem Frauenbein mit breiter, auffälliger Laufmasche"]},{"zahl":37,"wort":"Mac","alternativen":[],"bilder":["McDonald's-Restaurant","Hamburger"]},{"zahl":38,"wort":"Mafia","alternativen":["Möwe"],"bilder":["Gruppe von Männern in schwarzen Anzügen","schwarz-weiße Schuhe","Hauptfigur aus dem Film Der Pate","Möwe: einsame Möwe auf einer Buhne im Sturm"]},{"zahl":39,"wort":"Mappe","alternativen":[],"bilder":["Schnellhefter","eigene Aktenmappe"]},{"zahl":40,"wort":"Rose","alternativen":[],"bilder":["einzelne rote Rose","blühende Rosenhecke","rote, dicke Hagebutte"]},{"zahl":41,"wort":"Ratte","alternativen":[],"bilder":["ein ganzer Rattenschwarm, der auf dem Routenpunkt herumläuft","Rattenfänger von Hameln"]},{"zahl":42,"wort":"Ruine","alternativen":["RAN"],"bilder":["Kolosseum in Rom","RAN: Moderator der Fußballsendung"]},{"zahl":43,"wort":"Rum","alternativen":[],"bilder":["eine Rumflasche"]},{"zahl":44,"wort":"Rohr","alternativen":[],"bilder":["Routenpunkt besteht nur noch aus Rohren","mit Rohren eingerüstetes Haus","Panflöte aus Bambusrohr"]},{"zahl":45,"wort":"Rolle","alternativen":[],"bilder":["Küchenrolle","Planrolle","Verpackungsrolle"]},{"zahl":46,"wort":"Rauch","alternativen":[],"bilder":["Routenpunkt in Rauch eingehüllt","loderndes Feuer","indianisches Rauchzeichen"]},{"zahl":47,"wort":"Rock","alternativen":[],"bilder":["ein bestimmter Lieblingsrock","am Routenpunkt hängen ganz viele Röcke","die CD mit deiner liebsten Rockmusik"]},{"zahl":48,"wort":"Reif","alternativen":["Riff"],"bilder":["ein Hula-Hoop-Reifen","eine wundervolle Winterlandschaft mit Raureif","ein Zirkushund, der durch einen Reifen springt","Riff: Korallenriff unter Wasser mit herrlich bunten Fischen","Riff: Luftaufnahme einer Koralleninsel mit vorgelagertem Riff"]},{"zahl":49,"wort":"Raupe","alternativen":["Rappe"],"bilder":["eine dicke Raupe, die über ein Blatt kriecht","Raupe Nimmersatt","Rappe: Fury","Rappe: dein Pferd, falls du reitest"]},{"zahl":50,"wort":"Lasso","alternativen":["Los"],"bilder":["Lasso, das um den Routenpunkt gewickelt ist","Cowboy","Los: Glückslos einer Lotterie"]},{"zahl":51,"wort":"Latte","alternativen":[],"bilder":["Lattenrost","Routenpunkt aus Holz gezimmert"]},{"zahl":52,"wort":"Linie","alternativen":[],"bilder":["Routenpunkt ist zerkratzt","eine mit einem Stift gezogene Linie","liniertes Papier"]},{"zahl":53,"wort":"Lehm","alternativen":["Leim"],"bilder":["Lehmziegel","der Routenpunkt ist lehmverschmiert","Töpferscheibe","Leim: Erinnerung an das letzte Tapezieren ohne Fachmann"]},{"zahl":54,"wort":"Leier","alternativen":[],"bilder":["Leierkastenmann, eventuell mit Affe","griechische Lyra"]},{"zahl":55,"wort":"Lila","alternativen":[],"bilder":["Routenpunkt wird lila","irgendein lilafarbener Gegenstand, zum Beispiel ein Luftballon"]},{"zahl":56,"wort":"Loch","alternativen":["Lauch"],"bilder":["blaue Socke mit großem Loch an der Ferse","Sieb mit großen Löchern","Schweizer Käse (Achtung: 70 eventuell Käse)","Lauch: Kiste mit Lauch auf dem Bauernmarkt","Lauch: Lauch aus der frischen Erde ziehen"]},{"zahl":57,"wort":"Lack","alternativen":[],"bilder":["Flasche mit rotem Nagellack","Dose mit gelbem Farblack, die gerade umgekippt ist","chinesischer Lackschrank"]},{"zahl":58,"wort":"Lava","alternativen":["Löwe"],"bilder":["fließender, glühender Lavastrom","Lavastein, den du aus einem Urlaub mitgebracht hast","Löwe: Simba aus König der Löwen"]},{"zahl":59,"wort":"Lupe","alternativen":[],"bilder":["Nick Knatterton","Briefmarkenlupe"]},{"zahl":60,"wort":"Schuss","alternativen":[],"bilder":["am Schießstand auf einem Rummelplatz den Hauptgewinn erzielen","Zielscheibe"]},{"zahl":61,"wort":"Schutt","alternativen":[],"bilder":["Mohnblumen, die auf einer Schutthalde wachsen","ein Schrotthaufen bedeckt den Routenpunkt","Container mit Bauschutt"]},{"zahl":62,"wort":"Scheune","alternativen":[],"bilder":["Strohballen in einer Scheune, von denen du gerne ins weiche Stroh springen würdest"]},{"zahl":63,"wort":"Schaum","alternativen":[],"bilder":["Schaumbad","ein Glas Bier mit einer schönen weißen Schaumkrone (Achtung: 94 ist Bier)","große Seifenblasen, die du aus einem Eimer mit schaumiger Seifenlauge ziehst"]},{"zahl":64,"wort":"Schere","alternativen":[],"bilder":["große Gartenschere","bunte Kinderschere"]},{"zahl":65,"wort":"Schal","alternativen":["Schule","Schale","Scholle"],"bilder":["selbst gestrickter, bunter Schal","Schule: einer deiner Lehrer oder Mitschüler","Schale: Obstschale, Nussschale, Müslischale","Scholle: Eisscholle, Erdscholle, Fischfilet (Achtung: 86 ist Fisch)"]},{"zahl":66,"wort":"Schach","alternativen":[],"bilder":["Schachbrett","Schachfigur: Turm, Bauer oder Pferd","karierte Siegerflagge beim Autorennen","Routenpunkt schwarz-weiß kariert machen"]},{"zahl":67,"wort":"Scheck","alternativen":[],"bilder":["deine Scheckkarte","großer Gewinnscheck über eine Million Euro"]},{"zahl":68,"wort":"Schaf","alternativen":[],"bilder":["kleines Comicschaf, das vom Baum fällt","Schäfer mit seiner Herde","Schafwolle"]},{"zahl":69,"wort":"Schippe","alternativen":["Scheibe"],"bilder":["Schneeschippe","Scheibe: Brotscheibe, Glasscheibe, Wurstscheibe"]},{"zahl":70,"wort":"Kasse","alternativen":["Käse","Kuss"],"bilder":["alte mechanische Kasse","Käse: Käseplatte, Stinkkäse, Käsekuchen","Kuss: Der Kuss von Rodin oder Klimt"]},{"zahl":71,"wort":"Kette","alternativen":[],"bilder":["Halskette","Vorhängeschloss","Rasseln eines Gespenstes"]},{"zahl":72,"wort":"Kanne","alternativen":[],"bilder":["Lieblingskanne (Achtung: 78 ist Kaffee)","schwebende Kanne, aus der Milch fließt"]},{"zahl":73,"wort":"Kamm","alternativen":[],"bilder":["eigener Lieblingskamm","Erinnerung an eine Wanderung über einen Bergkamm"]},{"zahl":74,"wort":"Karre","alternativen":[],"bilder":["Schubkarre","dein Auto oder Lieblingsauto"]},{"zahl":75,"wort":"Keule","alternativen":[],"bilder":["Fred Feuerstein mit Keule","Baseballschläger","Kegel"]},{"zahl":76,"wort":"Koch","alternativen":[],"bilder":["Koch deines Lieblingsrestaurants","Kochmütze, Kochtopf oder Kochlöffel"]},{"zahl":77,"wort":"Kacke","alternativen":["Keks"],"bilder":["den Anblick von Hundehaufen auf dem Gehweg hast auch du sicher vor Augen","Keks: bunte Keksdose deines Haushalts mit deinen Lieblingskeksen"]},{"zahl":78,"wort":"Kaffee","alternativen":[],"bilder":["offene Kaffeepackung mit dem Duft frisch gemahlenen Kaffees","der Geschmack zerbissener Kaffeebohnen","Mokkatasse"]},{"zahl":79,"wort":"Kappe","alternativen":[],"bilder":["Basecap","Tick, Trick und Track Duck"]},{"zahl":80,"wort":"Fass","alternativen":["Vase"],"bilder":["Bierfass","Vase: Lieblingsvase"]},{"zahl":81,"wort":"Fett","alternativen":[],"bilder":["Regenpfütze, auf der Fett oder Öl schwimmt und in allen Regenbogenfarben schillert","Pommes frites","Margarinepackung","Routenpunkt ist mit Fett überzogen und glänzt"]},{"zahl":82,"wort":"Fahne","alternativen":[],"bilder":["Nationalflagge","Alkoholfahne","Linienrichter beim Fußball"]},{"zahl":83,"wort":"WM","alternativen":[],"bilder":["Gruppenfoto einer Fußballmannschaft","Flaggenwald der teilnehmenden Nationen"]},{"zahl":84,"wort":"Fähre","alternativen":["Fuhre"],"bilder":["großes Urlaubsschiff","Autofähre","einfache Flussfähre","Fuhre: hoch bepackter Heuwagen"]},{"zahl":85,"wort":"Falle","alternativen":[],"bilder":["Mausefalle","kanadischer Fallensteller mit Biberschwanzmütze"]},{"zahl":86,"wort":"Fisch","alternativen":["Wäsche"],"bilder":["Goldfisch im Glas","springende Forelle","Wäsche: Wäschekorb"]},{"zahl":87,"wort":"Waage","alternativen":[],"bilder":["Küchenwaage","Statue der Gerechtigkeit mit dem Symbol der Waage"]},{"zahl":88,"wort":"Waffe","alternativen":[],"bilder":["Pistole","durchlöcherte Schießscheibe vom Oktoberfest"]},{"zahl":89,"wort":"Wabe","alternativen":[],"bilder":["Bienenwaben","Honigbrot","Bienenwachskerze"]},{"zahl":90,"wort":"Bus","alternativen":[],"bilder":["Londoner Doppeldecker","Campingbus"]},{"zahl":91,"wort":"Bett","alternativen":[],"bilder":["dein Bett","Wasserbett"]},{"zahl":92,"wort":"Bahn","alternativen":["Buhne","Bühne","Bein","Biene"],"bilder":["Kinderholzeisenbahn, die im Kreis fährt","ICE","historische Dampflokomotive","Buhne: Küstenschutz am Meer","Bühne: Lieblingstheater, Lieblingsschauspieler","Bein: auf Stelzen gehen","Biene: Biene Maja (Achtung: 89 ist Wabe)"]},{"zahl":93,"wort":"Baum","alternativen":[],"bilder":["dein Lieblingsbaum","frisch gepflanzter Baum"]},{"zahl":94,"wort":"Bier","alternativen":["Bär"],"bilder":["Bierkasten","Bierflasche","frisch eingeschenktes Pils","Bär: Balou aus dem Dschungelbuch","Bär: Braunbär aus dem Zoo"]},{"zahl":95,"wort":"Ball","alternativen":[],"bilder":["Fußball, Volleyball, Golfball, was du willst","Ballkleid"]},{"zahl":96,"wort":"Buch","alternativen":[],"bilder":["das beeindruckendste Buch, das du je gelesen hast","der Eingang zu einer Bibliothek","ein aufgeschlagenes Kochbuch oder Lexikon"]},{"zahl":97,"wort":"Backe","alternativen":[],"bilder":["deine Backe brennt von einer Ohrfeige","Kuchen mit Geburtstagskerze (backe, backe Kuchen)","Gesicht einer Dame mit stark geschminkten Backen"]},{"zahl":98,"wort":"Bifi","alternativen":[],"bilder":["eine Schnur, an der ganz viele Würstchen hängen","eine Verpackung mit Bifi-Würstchen"]},{"zahl":99,"wort":"Papa","alternativen":[],"bilder":["Papa ist Papa"]}]}</script>
+<!-- DATA:END -->
+
+<script>
+"use strict";
+
+/* ================================================================ data */
+const DATA = JSON.parse(document.getElementById("master-data").textContent);
+const ENTRIES = DATA.eintraege;
+const BY_NUMBER = new Map(ENTRIES.map(e => [e.zahl, e]));
+const CONSONANTS = DATA.konsonanten;
+
+const DIGRAPHS = [["sch","6"],["ch","6"],["ck","7"]];
+const SINGLES = {s:"0",z:"0",t:"1",d:"1",n:"2",m:"3",r:"4",l:"5",k:"7",c:"7",g:"7",f:"8",v:"8",w:"8",p:"9",b:"9"};
+const UMLAUT = {"ä":"a","ö":"o","ü":"u","ß":"s","é":"e","è":"e"};
+
+/* Split a word into segments that either carry a digit or are filler.
+   This is the heart of the app: it makes visible why a word means its number. */
+function segment(word){
+  const raw = [...word];
+  const norm = raw.map(ch => UMLAUT[ch.toLowerCase()] || ch.toLowerCase());
+  const segments = [];
+  let previous = "";
+  let i = 0;
+  while(i < norm.length){
+    let hit = null;
+    for(const [seq, digit] of DIGRAPHS){
+      if(norm.slice(i, i + seq.length).join("") === seq){ hit = [seq, digit]; break; }
+    }
+    if(hit){
+      segments.push({text: raw.slice(i, i + hit[0].length).join(""), digit: hit[1]});
+      previous = hit[0].slice(-1);
+      i += hit[0].length;
+      continue;
+    }
+    const letter = norm[i];
+    if(SINGLES[letter]){
+      // A doubled consonant counts only once.
+      segments.push({text: raw[i], digit: letter === previous ? null : SINGLES[letter], doubled: letter === previous});
+      previous = letter;
+    }else{
+      segments.push({text: raw[i], digit: null});
+      previous = "";
+    }
+    i++;
+  }
+  return segments;
+}
+function encode(word){
+  return segment(word).map(s => s.digit).filter(Boolean).join("");
+}
+function digitsOf(number){
+  return number < 10 ? String(number) : String(number);
+}
+/* Which consonants may build this number, e.g. 68 -> "sch/ch + f/v/w" */
+function consonantHint(number){
+  const digits = (number < 10 ? String(number) : String(number)).split("");
+  return digits.map(d => CONSONANTS[Number(d)].anzeige).join("  +  ");
+}
+function blockOf(number){ return Math.floor(number / 10); }
+
+/* ============================================================== storage */
+const KEY = "master-system-v1";
+const DEFAULTS = {
+  version: 1,
+  cards: {},              // "12:w2n" -> {box, due, seen, fast}
+  custom: {},             // "12" -> {wort, notiz}
+  unlocked: [0],          // unlocked blocks of ten
+  settings: {newPerDay: 5, fastMs: 3000},
+  stats: {streak: 0, lastDay: "", todayCount: 0, todayDay: "", blitzBest: 0, reiheBest: 0},
+};
+const clone = value => JSON.parse(JSON.stringify(value));
+let state = load();
+
+function load(){
+  try{
+    const stored = JSON.parse(localStorage.getItem(KEY));
+    if(!stored) return clone(DEFAULTS);
+    return Object.assign(clone(DEFAULTS), stored, {
+      settings: Object.assign({}, DEFAULTS.settings, stored.settings || {}),
+      stats: Object.assign({}, DEFAULTS.stats, stored.stats || {}),
+    });
+  }catch(e){ return clone(DEFAULTS); }
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); }
+  catch(e){ toast("Speichern nicht möglich"); }
+}
+function today(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function daysBetween(a, b){
+  return Math.round((new Date(b) - new Date(a)) / 86400000);
+}
+function addDays(days){
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+/* =============================================================== leitner */
+const DIRECTIONS = ["n2w", "w2n"];
+const INTERVALS = [0, 0, 1, 3, 7, 16];   // index = box
+
+function cardId(number, direction){ return `${number}:${direction}`; }
+function getCard(number, direction){
+  return state.cards[cardId(number, direction)] || null;
+}
+function unlockedNumbers(){
+  const numbers = [];
+  for(const block of state.unlocked){
+    for(let n = block * 10; n < block * 10 + 10; n++) numbers.push(n);
+  }
+  return numbers.sort((a, b) => a - b);
+}
+function isDue(card){
+  return card && card.due <= today();
+}
+function dueCards(){
+  const list = [];
+  for(const number of unlockedNumbers()){
+    for(const direction of DIRECTIONS){
+      const card = getCard(number, direction);
+      if(isDue(card)) list.push({number, direction, card});
+    }
+  }
+  return list;
+}
+function newNumbers(limit){
+  const fresh = unlockedNumbers().filter(n => !getCard(n, "n2w") && !getCard(n, "w2n"));
+  return fresh.slice(0, limit);
+}
+/* box level of a number, averaged over both directions, 0 = untouched */
+function levelOf(number){
+  const boxes = DIRECTIONS.map(d => { const c = getCard(number, d); return c ? c.box : 0; });
+  return Math.min(...boxes);
+}
+function grade(number, direction, correct, ms){
+  const id = cardId(number, direction);
+  const card = state.cards[id] || {box: 1, due: today(), seen: 0, fast: 0};
+  const fast = ms <= state.settings.fastMs;
+  card.seen++;
+  if(correct){
+    if(fast){ card.box = Math.min(5, card.box + 1); card.fast++; }
+  }else{
+    card.box = 1;
+  }
+  card.due = addDays(INTERVALS[card.box]);
+  card.last = ms;
+  state.cards[id] = card;
+  bumpToday();
+  save();
+  return {correct, fast, box: card.box};
+}
+function seedCard(number, box){
+  for(const direction of DIRECTIONS){
+    const id = cardId(number, direction);
+    if(!state.cards[id]) state.cards[id] = {box, due: addDays(INTERVALS[box]), seen: 0, fast: 0};
+  }
+  save();
+}
+function bumpToday(){
+  const day = today();
+  if(state.stats.todayDay !== day){ state.stats.todayDay = day; state.stats.todayCount = 0; }
+  state.stats.todayCount++;
+  if(state.stats.lastDay !== day){
+    const gap = state.stats.lastDay ? daysBetween(state.stats.lastDay, day) : 999;
+    state.stats.streak = gap === 1 ? state.stats.streak + 1 : 1;
+    state.stats.lastDay = day;
+  }
+}
+
+/* ============================================================== helpers */
+const $ = sel => document.querySelector(sel);
+function el(tag, className, text){
+  const node = document.createElement(tag);
+  if(className) node.className = className;
+  if(text !== undefined) node.textContent = text;
+  return node;
+}
+/* How a number is written: 0 to 9 stay single digits, because 05 would be a
+   different code in the system (s + l) than the 5 that means Lee. */
+function label(number){ return String(number); }
+
+/* Timers belonging to the current exercise. Leaving a view kills them, so a
+   running blitz cannot paint over a later screen. */
+let timers = [];
+function later(fn, ms){ const id = setTimeout(fn, ms); timers.push(id); return id; }
+function every(fn, ms){ const id = setInterval(fn, ms); timers.push(id); return id; }
+function stopTimers(){
+  timers.forEach(id => { clearTimeout(id); clearInterval(id); });
+  timers = [];
+}
+function show(view){
+  stopTimers();
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  $("#view-" + view).classList.add("active");
+  window.scrollTo(0, 0);
+}
+let toastTimer;
+function toast(message){
+  const node = $("#toast");
+  node.textContent = message;
+  node.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => node.classList.remove("show"), 2200);
+}
+function shuffle(list){
+  const copy = list.slice();
+  for(let i = copy.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+function wordFor(number){
+  const custom = state.custom[number];
+  return (custom && custom.wort) ? custom.wort : BY_NUMBER.get(number).wort;
+}
+function acceptedWords(number){
+  const entry = BY_NUMBER.get(number);
+  const words = [entry.wort, ...entry.alternativen];
+  const custom = state.custom[number];
+  if(custom && custom.wort) words.unshift(custom.wort);
+  return words;
+}
+/* render a word with consonants strong and vowels receded */
+function renderWord(word, node){
+  const target = node || el("span", "word");
+  target.textContent = "";
+  for(const part of segment(word)){
+    const span = el("span", part.digit ? "k" : "v", part.text);
+    target.appendChild(span);
+  }
+  return target;
+}
+function renderBreakdown(word){
+  const wrap = el("div", "breakdown");
+  for(const part of segment(word)){
+    const seg = el("div", "seg" + (part.digit ? "" : " vowel"));
+    seg.appendChild(el("div", "letters", part.text));
+    seg.appendChild(el("div", "d", part.digit || "·"));
+    wrap.appendChild(seg);
+  }
+  return wrap;
+}
+
+/* ================================================================= home */
+function renderHome(){
+  const due = dueCards().length;
+  const fresh = newNumbers(state.settings.newPerDay).length;
+  const total = due + fresh;
+  const count = $("#due-count");
+  count.textContent = total;
+  count.classList.toggle("done", total === 0);
+  $("#due-label").textContent = total === 0
+    ? "Alles wiederholt. Üben geht trotzdem."
+    : (due + " zur Wiederholung" + (fresh ? ", " + fresh + " neu" : ""));
+  $("#btn-practice").textContent = total === 0 ? "Trotzdem üben" : "Üben";
+
+  if(state.stats.todayDay !== today()) state.stats.todayCount = 0;
+  $("#stat-streak").textContent = state.stats.streak;
+  $("#stat-today").textContent = state.stats.todayCount;
+  $("#stat-mastered").textContent = ENTRIES.filter(e => levelOf(e.zahl) >= 4).length;
+  $("#blitz-best").textContent = state.stats.blitzBest ? "Best " + state.stats.blitzBest : "";
+
+  const grid = $("#grid");
+  grid.textContent = "";
+  const dueSet = new Set(dueCards().map(c => c.number));
+  for(let n = 0; n < 100; n++){
+    const cell = el("button", "cell", label(n));
+    const unlocked = state.unlocked.includes(blockOf(n));
+    if(!unlocked) cell.classList.add("locked");
+    cell.dataset.box = unlocked ? levelOf(n) : 0;
+    if(dueSet.has(n)) cell.classList.add("due");
+    cell.addEventListener("click", () => openCard(n));
+    grid.appendChild(cell);
+  }
+}
+
+/* =============================================================== sheet */
+function openSheet(build){
+  const sheet = $("#sheet");
+  sheet.textContent = "";
+  sheet.appendChild(el("div", "grip"));
+  build(sheet);
+  $("#sheet-back").classList.add("open");
+}
+function closeSheet(){ $("#sheet-back").classList.remove("open"); }
+$("#sheet-back").addEventListener("click", event => {
+  if(event.target === $("#sheet-back")) closeSheet();
+});
+
+function openCard(number){
+  const entry = BY_NUMBER.get(number);
+  openSheet(sheet => {
+    const head = el("div");
+    head.style.display = "flex";
+    head.style.alignItems = "baseline";
+    head.style.gap = "14px";
+    const num = el("div", "num", label(number));
+    num.style.fontSize = "38px";
+    head.appendChild(num);
+    const w = renderWord(wordFor(number));
+    w.style.fontSize = "30px";
+    head.appendChild(w);
+    sheet.appendChild(head);
+
+    sheet.appendChild(renderBreakdown(wordFor(number)));
+
+    const hint = el("div", "small muted");
+    hint.style.textAlign = "center";
+    hint.style.marginTop = "10px";
+    hint.textContent = consonantHint(number);
+    sheet.appendChild(hint);
+
+    if(entry.alternativen.length){
+      const alts = el("p", "note");
+      alts.textContent = "Alternativen: " + entry.alternativen.join(", ");
+      sheet.appendChild(alts);
+    }
+
+    const list = el("ul", "imglist");
+    for(const image of entry.bilder) list.appendChild(el("li", null, image));
+    sheet.appendChild(list);
+
+    const custom = state.custom[number] || {};
+    const fieldWord = el("div", "field");
+    fieldWord.appendChild(el("label", null, "Euer eigenes Merkwort (optional)"));
+    const inputWord = el("input");
+    inputWord.type = "text";
+    inputWord.autocapitalize = "words";
+    inputWord.spellcheck = false;
+    inputWord.placeholder = entry.wort;
+    inputWord.value = custom.wort || "";
+    fieldWord.appendChild(inputWord);
+    sheet.appendChild(fieldWord);
+    const check = el("p", "note");
+    fieldWord.appendChild(check);
+    const validate = () => {
+      const value = inputWord.value.trim();
+      if(!value){ check.textContent = ""; check.className = "note"; return; }
+      const got = encode(value);
+      const want = String(number);
+      const ok = got === want || (number < 10 && got === want);
+      check.className = ok ? "note" : "note warn";
+      check.textContent = ok
+        ? "Passt: " + segment(value).filter(s => s.digit).map(s => s.text + "=" + s.digit).join(" ")
+        : "Achtung, dieses Wort codiert " + (got || "nichts") + ", nicht " + want + ".";
+    };
+    inputWord.addEventListener("input", validate);
+    validate();
+
+    const fieldNote = el("div", "field");
+    fieldNote.appendChild(el("label", null, "Euer Bild dazu"));
+    const inputNote = el("input");
+    inputNote.type = "text";
+    inputNote.placeholder = "Was siehst du genau?";
+    inputNote.value = custom.notiz || "";
+    fieldNote.appendChild(inputNote);
+    sheet.appendChild(fieldNote);
+
+    const card = getCard(number, "n2w");
+    const stats = el("p", "note");
+    stats.textContent = card
+      ? `Fach ${levelOf(number)} von 5, nächste Wiederholung ${card.due === today() ? "heute" : card.due}.`
+      : "Noch nicht geübt.";
+    sheet.appendChild(stats);
+
+    const buttons = el("div", "rowbtns");
+    const saveBtn = el("button", "btn", "Sichern");
+    saveBtn.addEventListener("click", () => {
+      const value = inputWord.value.trim();
+      const note = inputNote.value.trim();
+      if(value || note) state.custom[number] = {wort: value, notiz: note};
+      else delete state.custom[number];
+      save();
+      renderHome();
+      closeSheet();
+      toast("Gesichert");
+    });
+    const closeBtn = el("button", "btn ghost", "Schließen");
+    closeBtn.addEventListener("click", closeSheet);
+    buttons.appendChild(saveBtn);
+    buttons.appendChild(closeBtn);
+    sheet.appendChild(buttons);
+  });
+}
+
+/* ============================================================== drill */
+/* A session is a queue of tasks: {kind, number, direction} */
+const drill = {queue: [], index: 0, mode: "", startedAt: 0, correct: 0, total: 0, answered: false};
+
+function startSession(mode){
+  drill.mode = mode;
+  drill.index = 0;
+  drill.correct = 0;
+  drill.total = 0;
+  drill.queue = buildQueue(mode);
+  if(!drill.queue.length){
+    toast(mode === "intro" ? "Alle freigeschalteten Zahlen sind schon eingeführt" : "Nichts zu üben, schalte einen Block frei");
+    return;
+  }
+  $("#drill-title").textContent = ({
+    heute: "Heute üben", intro: "Kennenlernen", n2w: "Zahl zu Wort", w2n: "Wort zu Zahl"
+  })[mode] || mode;
+  show("drill");
+  nextTask();
+}
+function buildQueue(mode){
+  const numbers = unlockedNumbers();
+  if(mode === "intro"){
+    const fresh = numbers.filter(n => !getCard(n, "n2w"));
+    return fresh.slice(0, 10).map(n => ({kind: "intro", number: n}));
+  }
+  if(mode === "n2w" || mode === "w2n"){
+    return shuffle(numbers).slice(0, 20).map(n => ({kind: "quiz", number: n, direction: mode}));
+  }
+  // heute: due cards first, then a few new numbers, introduced before quizzed
+  const tasks = [];
+  for(const number of newNumbers(state.settings.newPerDay)){
+    tasks.push({kind: "intro", number});
+    tasks.push({kind: "quiz", number, direction: "n2w"});
+  }
+  const due = shuffle(dueCards()).map(c => ({kind: "quiz", number: c.number, direction: c.direction}));
+  return tasks.concat(due).slice(0, 45);
+}
+function nextTask(){
+  if(drill.index >= drill.queue.length) return finishSession();
+  const task = drill.queue[drill.index];
+  $("#drill-progress").style.width = (drill.index / drill.queue.length * 100) + "%";
+  $("#drill-verdict").textContent = "";
+  $("#drill-verdict").className = "verdict";
+  $("#drill-hint").textContent = "";
+  drill.answered = false;
+  drill.startedAt = performance.now();
+  if(task.kind === "intro") renderIntro(task);
+  else if(task.direction === "w2n") renderWordToNumber(task);
+  else renderNumberToWord(task);
+}
+function advance(){
+  drill.index++;
+  nextTask();
+}
+function finishSession(){
+  $("#drill-progress").style.width = "100%";
+  const prompt = $("#drill-prompt");
+  prompt.textContent = "";
+  $("#drill-answer").textContent = "";
+  $("#drill-verdict").textContent = "";
+  $("#drill-hint").textContent = "";
+  const done = el("div");
+  done.style.textAlign = "center";
+  done.appendChild(el("div", drill.total ? "bignum num" : "bigword",
+    drill.total ? Math.round(drill.correct / drill.total * 100) + "%" : "Fertig"));
+  done.appendChild(el("p", "muted", drill.total
+    ? `${drill.correct} von ${drill.total} richtig`
+    : "Durchgang beendet"));
+  const back = el("button", "btn", "Zur Übersicht");
+  back.addEventListener("click", goHome);
+  done.appendChild(back);
+  const again = el("button", "btn ghost", "Noch eine Runde");
+  again.style.marginTop = "8px";
+  again.addEventListener("click", () => startSession(drill.mode));
+  done.appendChild(again);
+  prompt.appendChild(done);
+}
+function goHome(){
+  renderHome();
+  show("home");
+}
+
+/* --- intro card -------------------------------------------------- */
+function renderIntro(task){
+  const entry = BY_NUMBER.get(task.number);
+  const prompt = $("#drill-prompt");
+  prompt.textContent = "";
+  prompt.appendChild(el("div", "ask", "Neu"));
+  prompt.appendChild(el("div", "bignum num", label(task.number)));
+  const breakdown = renderBreakdown(wordFor(task.number));
+  breakdown.classList.add("large");
+  prompt.appendChild(breakdown);
+  const list = el("ul", "imglist");
+  for(const image of entry.bilder.slice(0, 3)) list.appendChild(el("li", null, image));
+  prompt.appendChild(list);
+
+  const answer = $("#drill-answer");
+  answer.textContent = "";
+  const buttons = el("div", "selfcheck");
+  const known = el("button", "btn quiet", "Kenne ich schon");
+  known.addEventListener("click", () => { seedCard(task.number, 3); advance(); });
+  const learn = el("button", "btn", "Merke ich mir");
+  learn.addEventListener("click", () => { seedCard(task.number, 1); advance(); });
+  buttons.appendChild(known);
+  buttons.appendChild(learn);
+  answer.appendChild(buttons);
+  $("#drill-hint").textContent = "Stell dir das Bild wirklich vor, bevor du weitergehst.";
+}
+
+/* --- number to word ---------------------------------------------- */
+function renderNumberToWord(task){
+  const card = getCard(task.number, "n2w");
+  const box = card ? card.box : 1;
+  const prompt = $("#drill-prompt");
+  prompt.textContent = "";
+  prompt.appendChild(el("div", "ask", "Welches Bild?"));
+  prompt.appendChild(el("div", "bignum num", label(task.number)));
+  const answer = $("#drill-answer");
+  answer.textContent = "";
+
+  if(box <= 2){
+    // recognition stage: pick from six words of neighbouring numbers
+    const options = shuffle(distractors(task.number, 5).concat([task.number]));
+    const grid = el("div", "options");
+    for(const number of options){
+      const button = el("button", "opt");
+      renderWord(wordFor(number), button);
+      button.addEventListener("click", () => {
+        if(drill.answered) return;
+        drill.answered = true;
+        const ms = performance.now() - drill.startedAt;
+        const correct = number === task.number;
+        button.classList.add(correct ? "right" : "wrong");
+        if(!correct){
+          [...grid.children].forEach(child => {
+            if(child.textContent === wordFor(task.number)) child.classList.add("right");
+          });
+        }
+        settle(task, correct, ms);
+      });
+      grid.appendChild(button);
+    }
+    answer.appendChild(grid);
+    $("#drill-hint").textContent = consonantHint(task.number);
+  }else{
+    // recall stage: think first, then check yourself
+    const reveal = el("button", "btn", "Aufdecken");
+    reveal.addEventListener("click", () => {
+      const ms = performance.now() - drill.startedAt;
+      const word = renderWord(wordFor(task.number));
+      word.className = "word bigword reveal";
+      word.style.marginTop = "14px";
+      prompt.appendChild(word);
+      prompt.appendChild(renderBreakdown(wordFor(task.number)));
+      answer.textContent = "";
+      const check = el("div", "selfcheck");
+      const no = el("button", "btn quiet", "Wusste ich nicht");
+      no.addEventListener("click", () => settle(task, false, ms));
+      const yes = el("button", "btn", "Hatte ich");
+      yes.addEventListener("click", () => settle(task, true, ms));
+      check.appendChild(no);
+      check.appendChild(yes);
+      answer.appendChild(check);
+    });
+    answer.appendChild(reveal);
+    $("#drill-hint").textContent = "Erst das Bild sehen, dann aufdecken.";
+  }
+}
+function distractors(number, count){
+  const pool = unlockedNumbers().filter(n => n !== number);
+  const sameBlock = pool.filter(n => blockOf(n) === blockOf(number));
+  const picked = shuffle(sameBlock).slice(0, count);
+  const rest = shuffle(pool.filter(n => !picked.includes(n)));
+  while(picked.length < count && rest.length) picked.push(rest.pop());
+  return picked;
+}
+
+/* --- word to number ---------------------------------------------- */
+function renderWordToNumber(task){
+  const prompt = $("#drill-prompt");
+  prompt.textContent = "";
+  prompt.appendChild(el("div", "ask", "Welche Zahl?"));
+  const word = renderWord(wordFor(task.number));
+  word.className = "word bigword";
+  prompt.appendChild(word);
+
+  const answer = $("#drill-answer");
+  answer.textContent = "";
+  let typed = "";
+  const display = el("div", "entry");
+  const paint = () => {
+    display.textContent = "";
+    const shown = typed.padEnd(2, "_");
+    for(const ch of shown){
+      const span = el("span", ch === "_" ? "ph" : "", ch);
+      display.appendChild(span);
+    }
+  };
+  paint();
+  answer.appendChild(display);
+  answer.appendChild(keypad({
+    onDigit: digit => {
+      if(drill.answered || typed.length >= 2) return;
+      typed += digit;
+      paint();
+      if(typed.length === 2) submit();
+    },
+    onClear: () => { if(!drill.answered){ typed = ""; paint(); } },
+    actionLabel: "Prüfen",
+    onAction: submit,
+  }));
+  $("#drill-hint").textContent = "Zweistellige Zahlen lösen sich selbst aus, einstellige mit Prüfen bestätigen.";
+
+  function submit(){
+    if(drill.answered || !typed.length) return;
+    drill.answered = true;
+    const ms = performance.now() - drill.startedAt;
+    const correct = Number(typed) === task.number;
+    display.style.color = correct ? "var(--sage)" : "var(--rust)";
+    if(!correct){
+      const right = el("div", "small muted");
+      right.style.textAlign = "center";
+      right.textContent = "richtig: " + label(task.number);
+      answer.insertBefore(right, answer.children[1]);
+      prompt.appendChild(renderBreakdown(wordFor(task.number)));
+    }
+    settle(task, correct, ms);
+  }
+}
+function keypad({onDigit, onClear, actionLabel, onAction}){
+  const keys = el("div", "keys");
+  for(const digit of ["1","2","3","4","5","6","7","8","9"]){
+    const key = el("button", "key", digit);
+    key.addEventListener("click", () => onDigit(digit));
+    keys.appendChild(key);
+  }
+  const clear = el("button", "key sub", "Löschen");
+  clear.addEventListener("click", onClear);
+  keys.appendChild(clear);
+  const zero = el("button", "key", "0");
+  zero.addEventListener("click", () => onDigit("0"));
+  keys.appendChild(zero);
+  if(actionLabel){
+    const action = el("button", "key act", actionLabel);
+    action.addEventListener("click", onAction);
+    keys.appendChild(action);
+  }else{
+    keys.appendChild(el("div"));
+  }
+  return keys;
+}
+
+/* --- verdict and scheduling -------------------------------------- */
+function settle(task, correct, ms){
+  drill.total++;
+  if(correct) drill.correct++;
+  const result = grade(task.number, task.direction, correct, ms);
+  const verdict = $("#drill-verdict");
+  verdict.className = "verdict " + (correct ? "right" : "wrong");
+  verdict.textContent = correct ? (result.fast ? "Sitzt" : "Richtig, aber zögerlich") : "Nochmal";
+  const time = el("span", "ms", (ms / 1000).toFixed(1) + " s" + (correct && !result.fast ? ", zu langsam für das nächste Fach" : ""));
+  verdict.appendChild(time);
+  if(!correct){
+    // one repeat inside this session
+    drill.queue.splice(drill.index + 3, 0, task);
+  }
+  later(advance, correct ? (result.fast ? 550 : 1100) : 1800);
+}
+
+/* =============================================================== blitz */
+function startBlitz(){
+  show("drill");
+  $("#drill-title").textContent = "Blitz";
+  const pool = unlockedNumbers();
+  if(pool.length < 4){ toast("Zu wenige Zahlen freigeschaltet"); goHome(); return; }
+  let score = 0, streak = 0;
+  const endsAt = performance.now() + 60000;
+  const prompt = $("#drill-prompt");
+  const answer = $("#drill-answer");
+  const bar = $("#drill-progress");
+
+  const tick = every(() => {
+    const left = Math.max(0, endsAt - performance.now());
+    bar.style.width = (left / 60000 * 100) + "%";
+    if(left <= 0){ clearInterval(tick); finish(); }
+  }, 100);
+
+  ask();
+  function ask(){
+    const number = pool[Math.floor(Math.random() * pool.length)];
+    const direction = Math.random() < 0.5 ? "n2w" : "w2n";
+    const started = performance.now();
+    $("#drill-verdict").textContent = "";
+    $("#drill-hint").textContent = `${score} Punkte` + (streak > 2 ? `, Serie ${streak}` : "");
+    prompt.textContent = "";
+    answer.textContent = "";
+
+    if(direction === "n2w"){
+      prompt.appendChild(el("div", "bignum num", label(number)));
+      const options = shuffle(distractors(number, 3).concat([number]));
+      const grid = el("div", "options");
+      for(const candidate of options){
+        const button = el("button", "opt");
+        renderWord(wordFor(candidate), button);
+        button.addEventListener("click", () => {
+          const correct = candidate === number;
+          button.classList.add(correct ? "right" : "wrong");
+          score += correct ? 1 : 0;
+          streak = correct ? streak + 1 : 0;
+          grade(number, "n2w", correct, performance.now() - started);
+          later(() => { if(performance.now() < endsAt) ask(); }, correct ? 180 : 700);
+        });
+        grid.appendChild(button);
+      }
+      answer.appendChild(grid);
+    }else{
+      const word = renderWord(wordFor(number));
+      word.className = "word bigword";
+      prompt.appendChild(word);
+      let typed = "";
+      const display = el("div", "entry");
+      const paint = () => {
+        display.textContent = "";
+        for(const ch of typed.padEnd(2, "_")) display.appendChild(el("span", ch === "_" ? "ph" : "", ch));
+      };
+      paint();
+      answer.appendChild(display);
+      let settled = false;
+      const check = () => {
+        if(settled || !typed.length) return;
+        settled = true;
+        const correct = Number(typed) === number;
+        display.style.color = correct ? "var(--sage)" : "var(--rust)";
+        score += correct ? 1 : 0;
+        streak = correct ? streak + 1 : 0;
+        grade(number, "w2n", correct, performance.now() - started);
+        later(() => { if(performance.now() < endsAt) ask(); }, correct ? 180 : 700);
+      };
+      answer.appendChild(keypad({
+        onDigit: digit => {
+          if(settled || typed.length >= 2) return;
+          typed += digit;
+          paint();
+          if(typed.length === 2) check();
+        },
+        onClear: () => { if(!settled){ typed = ""; paint(); } },
+        actionLabel: "Prüfen",
+        onAction: check,
+      }));
+    }
+  }
+  function finish(){
+    const best = Math.max(state.stats.blitzBest || 0, score);
+    const isBest = score > (state.stats.blitzBest || 0);
+    state.stats.blitzBest = best;
+    save();
+    prompt.textContent = "";
+    answer.textContent = "";
+    $("#drill-hint").textContent = "";
+    const box = el("div");
+    box.style.textAlign = "center";
+    box.appendChild(el("div", "bignum num", String(score)));
+    box.appendChild(el("p", "muted", isBest ? "Neue Bestleistung" : "Bestleistung: " + best));
+    const again = el("button", "btn", "Nochmal");
+    again.addEventListener("click", startBlitz);
+    box.appendChild(again);
+    const back = el("button", "btn ghost", "Zur Übersicht");
+    back.style.marginTop = "8px";
+    back.addEventListener("click", goHome);
+    box.appendChild(back);
+    prompt.appendChild(box);
+  }
+}
+
+/* ============================================================== reihe */
+function startReihe(){
+  show("drill");
+  $("#drill-title").textContent = "Zahlenreihe";
+  $("#drill-progress").style.width = "0";
+  const prompt = $("#drill-prompt");
+  const answer = $("#drill-answer");
+  $("#drill-verdict").textContent = "";
+  prompt.textContent = "";
+  answer.textContent = "";
+  $("#drill-hint").textContent = "";
+
+  const setup = el("div");
+  setup.style.textAlign = "center";
+  setup.appendChild(el("p", "muted", "Wie viele Ziffern?"));
+  const chips = el("div", "chips");
+  chips.style.justifyContent = "center";
+  let length = 12;
+  for(const option of [8, 12, 20, 30]){
+    const chip = el("button", "chip" + (option === length ? " on" : ""), String(option));
+    chip.addEventListener("click", () => {
+      length = option;
+      [...chips.children].forEach(c => c.classList.toggle("on", c.textContent === String(option)));
+    });
+    chips.appendChild(chip);
+  }
+  setup.appendChild(chips);
+  const go = el("button", "btn", "Ziffern anzeigen");
+  go.addEventListener("click", () => memorize(length));
+  setup.appendChild(go);
+  setup.appendChild(el("p", "note", "Zerlege die Reihe in Paare, wandle jedes Paar in sein Bild und verknüpfe die Bilder zu einer Geschichte."));
+  prompt.appendChild(setup);
+
+  function memorize(count){
+    // Only two digit numbers form pairs. As long as just the first block is
+    // unlocked, every single digit gets its own image instead.
+    const unlocked = unlockedNumbers();
+    const twoDigit = unlocked.filter(n => n >= 10);
+    const usePairs = twoDigit.length > 0;
+    const pool = usePairs ? twoDigit : unlocked;
+    const width = usePairs ? 2 : 1;
+    const pairs = [];
+    for(let i = 0; i < count / width; i++){
+      pairs.push(pool[Math.floor(Math.random() * pool.length)]);
+    }
+    const digits = pairs.map(n => String(n).padStart(width, "0")).join("");
+    prompt.textContent = "";
+    answer.textContent = "";
+    const view = el("div");
+    view.appendChild(el("div", "ask", "Einprägen"));
+    const row = el("div", "digits");
+    for(const pair of pairs) row.appendChild(el("span", "pair", String(pair).padStart(width, "0")));
+    view.appendChild(row);
+    prompt.appendChild(view);
+    const ready = el("button", "btn", "Ich habe sie");
+    ready.addEventListener("click", () => recall(digits, pairs, width));
+    answer.appendChild(ready);
+    $("#drill-hint").textContent = usePairs
+      ? "Nimm dir Zeit. Zerlege in Paare, jedes Paar wird ein Bild."
+      : "Nimm dir Zeit. Jede Ziffer wird ein Bild.";
+  }
+
+  function recall(digits, pairs, width){
+    prompt.textContent = "";
+    answer.textContent = "";
+    $("#drill-hint").textContent = "";
+    let typed = "";
+    prompt.appendChild(el("div", "ask", "Wiedergeben"));
+    const display = el("div", "digits");
+    display.style.minHeight = "70px";
+    const paint = () => {
+      display.textContent = "";
+      for(let i = 0; i < typed.length; i += width){
+        display.appendChild(el("span", "pair", typed.slice(i, i + width)));
+      }
+      if(!typed.length) display.appendChild(el("span", "muted", "…"));
+    };
+    paint();
+    prompt.appendChild(display);
+    answer.appendChild(keypad({
+      onDigit: digit => {
+        if(typed.length >= digits.length) return;
+        typed += digit;
+        paint();
+      },
+      onClear: () => { typed = typed.slice(0, -1); paint(); },
+      actionLabel: "Prüfen",
+      onAction: () => evaluate(),
+    }));
+
+    function evaluate(){
+      prompt.textContent = "";
+      answer.textContent = "";
+      const correctPairs = [];
+      for(let i = 0; i < digits.length; i += width){
+        correctPairs.push(typed.slice(i, i + width) === digits.slice(i, i + width));
+      }
+      const hits = correctPairs.filter(Boolean).length;
+      const box = el("div");
+      box.style.textAlign = "center";
+      box.appendChild(el("div", "bignum num", hits + "/" + correctPairs.length));
+      box.appendChild(el("p", "muted", "richtige Paare"));
+      const row = el("div", "digits");
+      correctPairs.forEach((ok, index) => {
+        const shown = typed.slice(index * width, index * width + width) || "·".repeat(width);
+        row.appendChild(el("span", "pair " + (ok ? "ok" : "bad"), shown));
+      });
+      box.appendChild(row);
+      box.appendChild(el("p", "eyebrow", "So hätte die Kette ausgesehen"));
+      const chain = el("ul", "chain");
+      pairs.forEach((number, index) => {
+        const item = el("li");
+        item.appendChild(el("span", "n", String(number).padStart(width, "0")));
+        const w = renderWord(wordFor(number));
+        w.className = "word w";
+        item.appendChild(w);
+        // What you missed is what you need to see, so the misses stay bright.
+        if(correctPairs[index]) item.style.opacity = ".45";
+        chain.appendChild(item);
+      });
+      box.appendChild(chain);
+      const again = el("button", "btn", "Nochmal");
+      again.style.marginTop = "18px";
+      again.addEventListener("click", startReihe);
+      box.appendChild(again);
+      const back = el("button", "btn ghost", "Zur Übersicht");
+      back.style.marginTop = "8px";
+      back.addEventListener("click", goHome);
+      box.appendChild(back);
+      prompt.appendChild(box);
+      if(hits > (state.stats.reiheBest || 0)){
+        state.stats.reiheBest = hits;
+        save();
+      }
+    }
+  }
+}
+
+/* ========================================================== werkstatt */
+function renderWerkstatt(){
+  const table = $("#werk-table");
+  table.textContent = "";
+  for(const item of CONSONANTS){
+    const row = table.insertRow();
+    const digitCell = row.insertCell();
+    digitCell.className = "n";
+    digitCell.textContent = item.ziffer;
+    const letterCell = row.insertCell();
+    letterCell.className = "w";
+    letterCell.style.fontFamily = "var(--mono)";
+    letterCell.textContent = item.anzeige;
+    const hintCell = row.insertCell();
+    hintCell.className = "a";
+    hintCell.textContent = item.eselsbruecke;
+    hintCell.style.textAlign = "left";
+    hintCell.style.fontFamily = "var(--sans)";
+  }
+  const input = $("#werk-input");
+  const out = $("#werk-out");
+  const update = () => {
+    out.textContent = "";
+    const value = input.value.trim();
+    if(!value) return;
+    const digits = encode(value);
+    const number = el("div", "bignum num", digits || "–");
+    number.style.textAlign = "center";
+    out.appendChild(number);
+    out.appendChild(renderBreakdown(value));
+    if(digits.length === 2){
+      const entry = BY_NUMBER.get(Number(digits));
+      if(entry){
+        const note = el("p", "note");
+        note.style.textAlign = "center";
+        note.textContent = "Stengers Wort für " + digits + " ist " + entry.wort + ".";
+        out.appendChild(note);
+      }
+    }
+  };
+  input.oninput = update;
+  update();
+}
+function startZiffernDrill(){
+  show("drill");
+  $("#drill-title").textContent = "Ziffern drillen";
+  let index = 0, correct = 0;
+  const order = shuffle([0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9]);
+  const prompt = $("#drill-prompt");
+  const answer = $("#drill-answer");
+  ask();
+  function ask(){
+    if(index >= order.length){
+      prompt.textContent = "";
+      answer.textContent = "";
+      const box = el("div");
+      box.style.textAlign = "center";
+      box.appendChild(el("div", "bignum num", correct + "/" + order.length));
+      const back = el("button", "btn", "Zur Übersicht");
+      back.addEventListener("click", goHome);
+      box.appendChild(back);
+      prompt.appendChild(box);
+      return;
+    }
+    const digit = order[index];
+    $("#drill-progress").style.width = (index / order.length * 100) + "%";
+    $("#drill-verdict").textContent = "";
+    prompt.textContent = "";
+    answer.textContent = "";
+    prompt.appendChild(el("div", "ask", "Welcher Konsonant?"));
+    prompt.appendChild(el("div", "bignum num", String(digit)));
+    const options = shuffle(shuffle([0,1,2,3,4,5,6,7,8,9].filter(d => d !== digit)).slice(0, 3).concat([digit]));
+    const grid = el("div", "options");
+    for(const candidate of options){
+      const button = el("button", "opt", CONSONANTS[candidate].anzeige);
+      button.style.fontFamily = "var(--mono)";
+      button.addEventListener("click", () => {
+        const ok = candidate === digit;
+        button.classList.add(ok ? "right" : "wrong");
+        if(ok) correct++;
+        $("#drill-verdict").className = "verdict " + (ok ? "right" : "wrong");
+        $("#drill-verdict").textContent = ok ? CONSONANTS[digit].merkwort : CONSONANTS[digit].eselsbruecke;
+        index++;
+        later(ask, ok ? 350 : 1500);
+      });
+      grid.appendChild(button);
+    }
+    answer.appendChild(grid);
+  }
+}
+
+/* =============================================================== liste */
+function renderListe(){
+  const table = $("#liste-table");
+  table.textContent = "";
+  for(const entry of ENTRIES){
+    const row = table.insertRow();
+    const numberCell = row.insertCell();
+    numberCell.className = "n";
+    numberCell.textContent = label(entry.zahl);
+    const wordCell = row.insertCell();
+    wordCell.className = "w";
+    renderWord(wordFor(entry.zahl), wordCell);
+    const altCell = row.insertCell();
+    altCell.className = "a";
+    altCell.textContent = entry.alternativen.join(" · ");
+    row.style.cursor = "pointer";
+    row.addEventListener("click", () => openCard(entry.zahl));
+  }
+}
+
+/* ============================================================ settings */
+function renderSettings(){
+  $("#set-new").value = state.settings.newPerDay;
+  $("#set-fast").value = (state.settings.fastMs / 1000);
+  const wrap = $("#set-blocks");
+  wrap.textContent = "";
+  for(let block = 0; block < 10; block++){
+    const label = `${block * 10}–${block * 10 + 9}`;
+    const chip = el("button", "chip" + (state.unlocked.includes(block) ? " on" : ""), label);
+    chip.addEventListener("click", () => {
+      if(state.unlocked.includes(block)){
+        if(state.unlocked.length === 1){ toast("Mindestens ein Block muss offen bleiben"); return; }
+        state.unlocked = state.unlocked.filter(b => b !== block);
+      }else{
+        state.unlocked.push(block);
+        state.unlocked.sort((a, b) => a - b);
+      }
+      save();
+      renderSettings();
+      renderHome();
+    });
+    wrap.appendChild(chip);
+  }
+}
+function exportState(){
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type: "application/json"});
+  const url = URL.createObjectURL(blob);
+  const link = el("a");
+  link.href = url;
+  link.download = "master-system-stand-" + today() + ".json";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function importState(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const incoming = JSON.parse(reader.result);
+      if(!incoming.cards) throw new Error("kein Lernstand");
+      state = Object.assign(clone(DEFAULTS), incoming, {
+        settings: Object.assign({}, DEFAULTS.settings, incoming.settings || {}),
+        stats: Object.assign({}, DEFAULTS.stats, incoming.stats || {}),
+      });
+      save();
+      renderSettings();
+      renderHome();
+      toast("Übernommen");
+    }catch(e){ toast("Datei passt nicht"); }
+  };
+  reader.readAsText(file);
+}
+
+/* ============================================================== wiring */
+$("#btn-practice").addEventListener("click", () => startSession("heute"));
+$("#btn-settings").addEventListener("click", () => { renderSettings(); show("settings"); });
+$("#drill-back").addEventListener("click", goHome);
+$("#werk-back").addEventListener("click", goHome);
+$("#liste-back").addEventListener("click", goHome);
+$("#set-back").addEventListener("click", goHome);
+$("#werk-drill").addEventListener("click", startZiffernDrill);
+
+document.querySelectorAll(".menu button").forEach(button => {
+  button.addEventListener("click", () => {
+    const mode = button.dataset.mode;
+    if(mode === "werkstatt"){ renderWerkstatt(); show("werkstatt"); }
+    else if(mode === "liste"){ renderListe(); show("liste"); }
+    else if(mode === "blitz") startBlitz();
+    else if(mode === "reihe") startReihe();
+    else startSession(mode);
+  });
+});
+
+$("#btn-unlock").addEventListener("click", () => {
+  const next = state.unlocked.length ? Math.max(...state.unlocked) + 1 : 0;
+  if(next > 9){ toast("Alle Blöcke sind offen"); return; }
+  const current = Math.max(...state.unlocked);
+  const solid = ENTRIES.filter(e => blockOf(e.zahl) === current && levelOf(e.zahl) >= 3).length;
+  if(solid < 8){
+    openSheet(sheet => {
+      sheet.appendChild(el("p", null, `Im Block ${current * 10} bis ${current * 10 + 9} sitzen erst ${solid} von 10 Zahlen sicher.`));
+      sheet.appendChild(el("p", "note", "Stenger rät, erst weiterzugehen, wenn der aktuelle Zehnerblock steht. Ihr könnt aber trotzdem weitermachen."));
+      const buttons = el("div", "rowbtns");
+      const anyway = el("button", "btn", `${next * 10} bis ${next * 10 + 9} trotzdem öffnen`);
+      anyway.addEventListener("click", () => {
+        state.unlocked.push(next);
+        save();
+        renderHome();
+        closeSheet();
+        toast("Freigeschaltet");
+      });
+      const wait = el("button", "btn ghost", "Erst weiterüben");
+      wait.addEventListener("click", closeSheet);
+      buttons.appendChild(anyway);
+      buttons.appendChild(wait);
+      sheet.appendChild(buttons);
+    });
+    return;
+  }
+  state.unlocked.push(next);
+  save();
+  renderHome();
+  toast(`${next * 10} bis ${next * 10 + 9} freigeschaltet`);
+});
+
+$("#set-new").addEventListener("change", event => {
+  state.settings.newPerDay = Math.max(1, Math.min(20, Number(event.target.value) || 5));
+  save();
+  renderHome();
+});
+$("#set-fast").addEventListener("change", event => {
+  state.settings.fastMs = Math.max(1000, Math.min(15000, (Number(event.target.value) || 3) * 1000));
+  save();
+});
+$("#btn-export").addEventListener("click", exportState);
+$("#btn-import").addEventListener("click", () => $("#import-file").click());
+$("#import-file").addEventListener("change", event => {
+  if(event.target.files[0]) importState(event.target.files[0]);
+  event.target.value = "";
+});
+$("#btn-reset").addEventListener("click", () => {
+  openSheet(sheet => {
+    sheet.appendChild(el("p", null, "Lernstand wirklich zurücksetzen?"));
+    sheet.appendChild(el("p", "note", "Eigene Merkwörter, Notizen und alle Fächer werden gelöscht. Das lässt sich nicht rückgängig machen."));
+    const buttons = el("div", "rowbtns");
+    const yes = el("button", "btn", "Löschen");
+    yes.style.background = "var(--rust)";
+    yes.addEventListener("click", () => {
+      state = clone(DEFAULTS);
+      save();
+      renderSettings();
+      renderHome();
+      closeSheet();
+      toast("Zurückgesetzt");
+    });
+    const no = el("button", "btn ghost", "Abbrechen");
+    no.addEventListener("click", closeSheet);
+    buttons.appendChild(yes);
+    buttons.appendChild(no);
+    sheet.appendChild(buttons);
+  });
+});
+
+/* keyboard support for the desktop */
+document.addEventListener("keydown", event => {
+  if(!$("#view-drill").classList.contains("active")) return;
+  const keys = document.querySelectorAll("#drill-answer .key");
+  if(/^[0-9]$/.test(event.key)){
+    const key = [...keys].find(k => k.textContent === event.key);
+    if(key) key.click();
+  }
+});
+
+renderHome();
+
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+</script>
+</body>
+</html>
