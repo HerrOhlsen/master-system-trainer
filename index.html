@@ -90,7 +90,8 @@
   --cell5-fg:#fffaf0;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0}
+/* kill iOS double-tap-to-zoom (fast repeated taps on the keypad); pinch zoom stays */
+html,body{margin:0;padding:0;touch-action:manipulation}
 body{
   background:var(--ink);
   color:var(--paper);
@@ -100,7 +101,7 @@ body{
   overscroll-behavior-y:contain;
   padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
-button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none}
 input{font:inherit}
 :focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 
