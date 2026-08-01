@@ -58,6 +58,20 @@ kommen in derselben Sitzung noch einmal.
 Der Fortschritt liegt in `localStorage`, pro Gerät. Export und Import als
 JSON-Datei gleichen zwei Geräte ab.
 
+## Ketten in „Wort zu Zahl"
+
+In den Einstellungen steht, wie viele Wörter eine Aufgabe zeigt: einzeln, zwei
+oder drei. Bei zwei oder drei stehen die Bilder untereinander und die ganze
+Ziffernfolge wird am Stück getippt, aus drei Wörtern wird also eine sechs
+stellige Zahl. Das ist näher am eigentlichen Zweck des Systems, wo eine Reihe
+am Stück zurückgelesen wird.
+
+Gewertet wird trotzdem pro Zahl: jede Karte bekommt ihr eigenes Ergebnis, die
+Zeit wird gleichmäßig über die Kette geteilt, und nur die verfehlten Zahlen
+kommen in derselben Sitzung noch einmal. Ketten nehmen ausschließlich Zahlen ab
+10, weil ein Wort für 0 bis 9 nur eine Ziffer trägt und die Reihe sonst
+verrutscht. Solange dafür zu wenig freigeschaltet ist, läuft der Modus einzeln.
+
 ## Darstellung
 
 Hell und dunkel sind zwei Fassungen derselben Idee: Tinte und Messing bei Nacht,

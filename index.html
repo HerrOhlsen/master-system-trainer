@@ -236,6 +236,17 @@ input{font:inherit}
   min-height:52px;margin-bottom:14px
 }
 .entry .ph{color:var(--placeholder)}
+.entry.chain{font-size:34px;letter-spacing:.1em}
+.entry .pair{display:inline-block;margin:0 .2em}
+.entry .pair.ok{color:var(--sage)}
+.entry .pair.bad{color:var(--rust)}
+.wordchain{margin:4px 0 0;padding:0;list-style:none}
+.wordchain li{display:flex;gap:12px;align-items:baseline;justify-content:center;padding:5px 0}
+.wordchain .n{font-family:var(--mono);font-size:14px;color:var(--brass);min-width:24px;text-align:right}
+.wordchain .w{font-family:var(--serif);font-size:clamp(28px,9vw,42px);line-height:1.15}
+/* three words plus keypad have to fit on a phone without scrolling */
+.wordchain.three .w{font-size:clamp(23px,7vw,32px)}
+.wordchain li.miss .n{color:var(--rust)}
 .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .key{
   padding:16px 0;border-radius:11px;background:var(--ink-raised);border:1px solid var(--line);
@@ -361,7 +372,7 @@ input{font:inherit}
     <div class="menu">
       <button data-mode="intro"><span class="t">Kennenlernen<small>Neue Zahlen mit Bild und Herleitung</small></span><span class="chev">›</span></button>
       <button data-mode="n2w"><span class="t">Zahl zu Wort<small>Welches Bild gehört zur Zahl?</small></span><span class="chev">›</span></button>
-      <button data-mode="w2n"><span class="t">Wort zu Zahl<small>Die Richtung, die du beim Abrufen brauchst</small></span><span class="chev">›</span></button>
+      <button data-mode="w2n"><span class="t">Wort zu Zahl<small>Die Richtung, die du beim Abrufen brauchst</small></span><span class="badge num" id="w2n-chain"></span><span class="chev">›</span></button>
       <button data-mode="blitz"><span class="t">Blitz<small>60 Sekunden, gemischt</small></span><span class="badge num" id="blitz-best"></span><span class="chev">›</span></button>
       <button data-mode="reihe"><span class="t">Zahlenreihe merken<small>Der eigentliche Zweck des Systems</small></span><span class="chev">›</span></button>
       <button data-mode="werkstatt"><span class="t">Konsonanten-Werkstatt<small>Regel drillen und eigene Wörter prüfen</small></span><span class="chev">›</span></button>
@@ -434,6 +445,12 @@ input{font:inherit}
       <input id="set-fast" class="num-in" type="number" min="1" max="15" step="0.5" inputmode="decimal">
     </div>
     <p class="note">Nur schnelle richtige Antworten steigen ins nächste Fach. Richtig, aber langsam, hält die Karte auf ihrem Stand.</p>
+
+    <div class="field">
+      <label>Wort zu Zahl: Wörter pro Aufgabe</label>
+      <div class="chips" id="set-chain" style="margin-bottom:0;margin-top:2px"></div>
+    </div>
+    <p class="note">Bei zwei oder drei Wörtern stehen sie untereinander und du tippst die ganze Ziffernfolge am Stück, also gleich ein Paar oder ein Tripel. Ketten nehmen nur Zahlen ab 10, weil ein Wort für 0 bis 9 nur eine Ziffer trägt und die Reihe sonst verrutscht.</p>
 
     <div class="section-title">Freigeschaltet</div>
     <div class="chips" id="set-blocks"></div>
@@ -528,7 +545,7 @@ const DEFAULTS = {
   cards: {},              // "12:w2n" -> {box, due, seen, fast}
   custom: {},             // "12" -> {wort, notiz}
   unlocked: [0],          // unlocked blocks of ten
-  settings: {newPerDay: 5, fastMs: 3000, theme: "system", reiheBlocks: null},
+  settings: {newPerDay: 5, fastMs: 3000, theme: "system", reiheBlocks: null, w2nChain: 1},
   stats: {streak: 0, lastDay: "", todayCount: 0, todayDay: "", blitzBest: 0, reiheBest: 0},
 };
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -746,6 +763,7 @@ function renderHome(){
   $("#stat-today").textContent = state.stats.todayCount;
   $("#stat-mastered").textContent = ENTRIES.filter(e => levelOf(e.zahl) >= 4).length;
   $("#blitz-best").textContent = state.stats.blitzBest ? "Best " + state.stats.blitzBest : "";
+  $("#w2n-chain").textContent = chainSize() > 1 ? chainSize() + "er" : "";
 
   const grid = $("#grid");
   grid.textContent = "";
@@ -887,11 +905,25 @@ function startSession(mode){
     toast(mode === "intro" ? "Alle freigeschalteten Zahlen sind schon eingeführt" : "Nichts zu üben, schalte einen Block frei");
     return;
   }
+  const size = chainSize();
   $("#drill-title").textContent = nothingPending ? "Auffrischen" : ({
-    heute: "Heute üben", intro: "Kennenlernen", n2w: "Zahl zu Wort", w2n: "Wort zu Zahl"
+    heute: "Heute üben", intro: "Kennenlernen", n2w: "Zahl zu Wort",
+    w2n: size > 1 ? `Wort zu Zahl, ${size}er-Kette` : "Wort zu Zahl"
   })[mode] || mode;
   show("drill");
+  if(mode === "w2n" && (state.settings.w2nChain || 1) > 1 && size === 1){
+    toast("Ketten brauchen Zahlen ab 10, deshalb einzeln");
+  }
   nextTask();
+}
+/* How many words the word-to-number drill shows at once. A chain only works
+   with two digit numbers: the word for 0 to 9 carries a single consonant, so
+   "07" would read back as 7 and shift everything behind it. Too few of them
+   unlocked and the drill quietly falls back to single words. */
+function chainSize(){
+  const wanted = Math.min(3, Math.max(1, Number(state.settings.w2nChain) || 1));
+  if(wanted === 1) return 1;
+  return unlockedNumbers().filter(n => n >= 10).length >= wanted ? wanted : 1;
 }
 function buildQueue(mode){
   const numbers = unlockedNumbers();
@@ -899,8 +931,21 @@ function buildQueue(mode){
     const fresh = numbers.filter(n => !getCard(n, "n2w"));
     return fresh.slice(0, 10).map(n => ({kind: "intro", number: n}));
   }
-  if(mode === "n2w" || mode === "w2n"){
-    return shuffle(numbers).slice(0, 20).map(n => ({kind: "quiz", number: n, direction: mode}));
+  if(mode === "n2w"){
+    return shuffle(numbers).slice(0, 20).map(n => ({kind: "quiz", number: n, direction: "n2w"}));
+  }
+  if(mode === "w2n"){
+    const size = chainSize();
+    if(size === 1){
+      return shuffle(numbers).slice(0, 20).map(n => ({kind: "quiz", number: n, direction: "w2n"}));
+    }
+    const pool = shuffle(numbers.filter(n => n >= 10));
+    const count = Math.floor(Math.min(pool.length, 21) / size) * size;
+    const tasks = [];
+    for(let i = 0; i < count; i += size){
+      tasks.push({kind: "quiz", direction: "w2n", numbers: pool.slice(i, i + size)});
+    }
+    return tasks;
   }
   // heute: due cards first, then a few new numbers, introduced before quizzed
   const tasks = [];
@@ -937,6 +982,7 @@ function nextTask(){
   drill.answered = false;
   drill.startedAt = performance.now();
   if(task.kind === "intro") renderIntro(task);
+  else if(task.numbers) renderWordChain(task);
   else if(task.direction === "w2n") renderWordToNumber(task);
   else renderNumberToWord(task);
 }
@@ -1119,6 +1165,72 @@ function renderWordToNumber(task){
     settle(task, correct, ms);
   }
 }
+/* --- several words, one long number ------------------------------ */
+/* Same direction as above, only the whole chain is answered in one go: three
+   words become one six digit row. That is closer to how the system is used
+   later, where images are read back as a continuous number. */
+function renderWordChain(task){
+  const numbers = task.numbers;
+  const digits = numbers.length * 2;
+  const prompt = $("#drill-prompt");
+  prompt.textContent = "";
+  prompt.appendChild(el("div", "ask", `${numbers.length} Bilder, ${digits} Ziffern`));
+  const list = el("ul", "wordchain" + (numbers.length >= 3 ? " three" : ""));
+  numbers.forEach((number, index) => {
+    const item = el("li");
+    item.appendChild(el("span", "n", (index + 1) + "."));
+    const word = renderWord(wordFor(number));
+    word.className = "word w";
+    item.appendChild(word);
+    list.appendChild(item);
+  });
+  prompt.appendChild(list);
+
+  const answer = $("#drill-answer");
+  answer.textContent = "";
+  let typed = "";
+  const display = el("div", "entry chain");
+  const paint = () => {
+    display.textContent = "";
+    const shown = typed.padEnd(digits, "_");
+    for(let i = 0; i < digits; i += 2){
+      const pair = el("span", "pair");
+      for(const ch of shown.slice(i, i + 2)) pair.appendChild(el("span", ch === "_" ? "ph" : "", ch));
+      display.appendChild(pair);
+    }
+  };
+  paint();
+  answer.appendChild(display);
+  answer.appendChild(keypad({
+    onDigit: digit => {
+      if(drill.answered || typed.length >= digits) return;
+      typed += digit;
+      paint();
+      if(typed.length === digits) submit();
+    },
+    // A long row is worth a backspace, retyping six digits over one slip is not.
+    onClear: () => { if(!drill.answered){ typed = typed.slice(0, -1); paint(); } },
+    actionLabel: "Prüfen",
+    onAction: submit,
+  }));
+  $("#drill-hint").textContent = "Der Reihe nach, jede Zahl zweistellig. Löschen nimmt die letzte Ziffer zurück.";
+
+  function submit(){
+    if(drill.answered || typed.length < digits) return;
+    drill.answered = true;
+    const ms = performance.now() - drill.startedAt;
+    const results = numbers.map((n, i) => typed.slice(i * 2, i * 2 + 2) === String(n).padStart(2, "0"));
+    [...display.children].forEach((pair, i) => pair.classList.add(results[i] ? "ok" : "bad"));
+    results.forEach((ok, i) => {
+      // What you missed is what you need to see, so hits recede and misses
+      // show the number that was meant.
+      if(ok){ list.children[i].style.opacity = ".4"; return; }
+      list.children[i].classList.add("miss");
+      list.children[i].querySelector(".n").textContent = label(numbers[i]);
+    });
+    settleChain(task, numbers, results, ms);
+  }
+}
 function keypad({onDigit, onClear, actionLabel, onAction}){
   const keys = el("div", "keys");
   for(const digit of ["1","2","3","4","5","6","7","8","9"]){
@@ -1157,6 +1269,33 @@ function settle(task, correct, ms){
     drill.queue.splice(drill.index + 3, 0, task);
   }
   later(advance, correct ? (result.fast ? 550 : 1100) : 1800);
+}
+/* A chain is one input but several cards. Each number is graded on its own, so
+   the Leitner boxes stay comparable with the single word drill, and the time is
+   split evenly across the chain. */
+function settleChain(task, numbers, results, ms){
+  const per = ms / numbers.length;
+  const hits = results.filter(Boolean).length;
+  const allRight = hits === numbers.length;
+  let fast = true;
+  numbers.forEach((number, index) => {
+    drill.total++;
+    if(results[index]) drill.correct++;
+    const result = grade(number, "w2n", results[index], per);
+    if(!result.fast) fast = false;
+  });
+  const verdict = $("#drill-verdict");
+  verdict.className = "verdict " + (allRight ? "right" : "wrong");
+  verdict.textContent = allRight ? (fast ? "Sitzt" : "Richtig, aber zögerlich") : `${hits} von ${numbers.length} richtig`;
+  verdict.appendChild(el("span", "ms",
+    (ms / 1000).toFixed(1) + " s, " + (per / 1000).toFixed(1) + " s pro Zahl"
+    + (allRight && !fast ? ", zu langsam für das nächste Fach" : "")));
+  const missed = numbers.filter((n, index) => !results[index]);
+  if(missed.length){
+    // one repeat inside this session, only the numbers that got away
+    drill.queue.splice(drill.index + 3, 0, {kind: "quiz", direction: "w2n", numbers: missed});
+  }
+  later(advance, allRight ? (fast ? 800 : 1300) : 2400);
 }
 
 /* =============================================================== blitz */
@@ -1578,6 +1717,20 @@ function renderSettings(){
   }
   $("#set-new").value = state.settings.newPerDay;
   $("#set-fast").value = (state.settings.fastMs / 1000);
+  const chainWrap = $("#set-chain");
+  chainWrap.textContent = "";
+  for(const size of [1, 2, 3]){
+    const caption = size === 1 ? "einzeln" : size + " Wörter";
+    const chip = el("button", "chip" + ((state.settings.w2nChain || 1) === size ? " on" : ""), caption);
+    chip.style.fontFamily = "var(--sans)";
+    chip.addEventListener("click", () => {
+      state.settings.w2nChain = size;
+      save();
+      renderSettings();
+      renderHome();
+    });
+    chainWrap.appendChild(chip);
+  }
   const wrap = $("#set-blocks");
   wrap.textContent = "";
   for(let block = 0; block < 10; block++){
