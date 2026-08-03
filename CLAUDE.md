@@ -57,8 +57,10 @@ beide Abfragerichtungen, Blitz, Zahlenreihe, Werkstatt, Kartenansicht,
 Einstellungen. In hellem **und** dunklem Modus prüfen, im Stylesheet darf kein
 fester Farbwert stehen, alle Farben kommen aus den Theme-Tokens.
 
-Der Service Worker cached. Nach einem Deployment einmal neu laden, sonst zeigt
-das Handy die alte Fassung. Bei größeren Änderungen `CACHE` in `sw.js` hochzählen.
+Der Service Worker liefert aus dem Cache und aktualisiert im Hintergrund. Nach
+einem Deployment also zweimal starten: der erste Start zeigt noch die alte
+Fassung und holt die neue, der zweite zeigt sie. Bei größeren Änderungen `CACHE`
+in `sw.js` hochzählen, dann wird alles neu vorgeladen.
 
 ## Plattform
 

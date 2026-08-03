@@ -84,6 +84,19 @@ Voreinstellung ist „Automatisch", die App folgt dann dem Systemmodus und
 reagiert auf einen Wechsel im laufenden Betrieb. In den Einstellungen lässt sich
 fest auf hell oder dunkel stellen.
 
+## Offline und Updates
+
+Der Service Worker liefert zuerst aus dem Cache und holt die neue Fassung im
+Hintergrund. Damit startet die App immer sofort, auch wenn das Telefon gerade
+aufwacht und das Netz noch nicht steht. Vorher lief es umgekehrt, und ein
+halb verbundenes WLAN ließ `fetch()` hängen statt scheitern: die App blieb weiß,
+bis man sie beendet und neu gestartet hat.
+
+Der Preis ist ein Start Verzögerung: nach einem Deployment zeigt der erste Start
+noch die alte Fassung und lädt die neue nach, der zweite zeigt sie. In den Cache
+kommen nur saubere Antworten vom eigenen Server, damit ein 404 aus einem halb
+fertigen Deployment oder die Anmeldeseite eines Hotspots die App nicht ersetzt.
+
 ## Eigene Merkwörter
 
 Stenger empfiehlt ausdrücklich, schlecht sitzende Bilder zu ersetzen. Über das
