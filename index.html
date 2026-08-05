@@ -1141,13 +1141,16 @@ function renderWordToNumber(task){
       if(drill.answered || typed.length >= 2) return;
       typed += digit;
       paint();
-      if(typed.length === 2) submit();
+      /* Two digits are always complete. A single digit only when it already is
+         the answer: waiting for Prüfen is a nuisance for 0 to 9, but a first
+         digit that does not fit must not be judged before the second one. */
+      if(typed.length === 2 || Number(typed) === task.number) submit();
     },
     onClear: () => { if(!drill.answered){ typed = ""; paint(); } },
     actionLabel: "Prüfen",
     onAction: submit,
   }));
-  $("#drill-hint").textContent = "Zweistellige Zahlen lösen sich selbst aus, einstellige mit Prüfen bestätigen.";
+  $("#drill-hint").textContent = "Sobald die Zahl stimmt, geht es von selbst weiter. Sonst mit Prüfen bestätigen.";
 
   function submit(){
     if(drill.answered || !typed.length) return;
@@ -1372,7 +1375,8 @@ function startBlitz(){
           if(settled || typed.length >= 2) return;
           typed += digit;
           paint();
-          if(typed.length === 2) check();
+          // same rule as in the drill: a fitting single digit stands on its own
+          if(typed.length === 2 || Number(typed) === number) check();
         },
         onClear: () => { if(!settled){ typed = ""; paint(); } },
         actionLabel: "Prüfen",
