@@ -12,14 +12,16 @@ Christiane Stengers „Warum fällt das Schaf vom Baum?".
 | `index.html` | Die komplette App: Markup, Styles, Logik und die eingebetteten Daten |
 | `data/master-system.json` | Die Datenquelle. Hier wird inhaltlich geändert, nirgends sonst |
 | `data/mnemonica.json` | Die Stapelreihenfolge für den Kartenbereich |
+| `data/kartensystem.json` | Die 52 Kartenwörter nach der Konsonantenregel |
 | `tools/mastersystem.py` | Encoder und Konsistenzprüfung, gemeinsame Basis der Skripte |
 | `tools/stack.py` | Prüft den Kartenstapel auf Vollständigkeit |
+| `tools/karten.py` | Prüft die Kartenwörter gegen Farbe, Wert und die Zahlwörter |
 | `tools/inject_data.py` | Schreibt die JSON-Daten in `index.html` |
 | `tools/build_docx.py` | Baut den druckbaren Spickzettel |
 | `tools/build_icons.py` | Erzeugt die App-Icons |
 | `sw.js`, `manifest.webmanifest` | Offline-Betrieb und Homescreen-Symbol |
 
-Nach jeder Änderung an `data/master-system.json`:
+Nach jeder Änderung an einer Datei unter `data/`:
 
 ```
 python tools/inject_data.py
@@ -98,10 +100,23 @@ darauf liegt Pik-Zehn, fertig ist der Anker. Das gibt wahlfreien Zugriff in
 beide Richtungen, was eine Route nicht kann, denn dort müsste man immer von
 vorn durchlaufen.
 
-Vier Modi: Kennenlernen, Position zu Karte, Karte zu Position, Nachbarn. Dazu
-eine Liste aller 52 Karten, in der das eigene Bild pro Karte steht. Das Bild
-gehört der Karte, nicht der Position, und überlebt damit einen Stapelwechsel.
+Vier Modi: Kennenlernen, Position zu Karte, Karte zu Position, Nachbarn.
 Freigeschaltet wird in Blöcken zu 13.
+
+Die 52 Kartenwörter stehen in `data/kartensystem.json` und folgen derselben
+Konsonantenregel: der erste Konsonant trägt die Farbe (z Kreuz, k Karo, p Pik,
+h Herz, gleichwertige Buchstaben erlaubt), die folgenden den Wert. Herz ist der
+Sonderfall, weil h keine Ziffer trägt, ein Herzwort codiert deshalb nur den
+Wert. Bube, Dame und König gehen nicht phonetisch, weil alle Konsonanten von 0
+bis 9 vergeben sind: sie sind Personen, die Art der Person nennt den Rang, der
+Anfangslaut die Farbe. `tools/karten.py` rechnet jedes Wort zurück und bricht
+ab, wenn eines nicht passt oder mit einem Zahlwort kollidiert.
+
+Wort und Bild gehören der Karte, nicht der Position, und überleben damit einen
+Stapelwechsel. Beides lässt sich in der Kartenliste überschreiben. Die
+Kartenwerkstatt zerlegt ein eingetipptes Wort und sagt, welche Karte darin
+steckt, samt Warnung, wenn es schon als Zahlwort oder bei einer anderen Karte
+vergeben ist.
 
 Gelernt wird mit derselben Leitner-Box wie die Zahlen, nur in einem eigenen
 Fächersatz unter `state.stack`. Die Zahlenkarten bleiben davon unberührt, und

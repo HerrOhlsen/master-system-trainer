@@ -39,7 +39,7 @@ def check(data):
 
     for index, code in enumerate(stack, start=1):
         if split(code) is None:
-            problems.append(f"Position {index}: '{code}' ist kein gueltiges Kartenkuerzel")
+            problems.append(f"Position {index}: '{code}' ist kein gültiges Kartenkürzel")
 
     seen = {}
     for index, code in enumerate(stack, start=1):
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     problems = check(data)
     print(f"{len(data['stapel'])} Karten geladen.")
     if problems:
-        print(f"\n{len(problems)} Auffaelligkeit(en):")
+        print(f"\n{len(problems)} Auffälligkeit(en):")
         for problem in problems:
             print("  " + problem)
     else:

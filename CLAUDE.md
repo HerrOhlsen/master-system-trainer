@@ -13,8 +13,8 @@ Geviert. Code-Kommentare auf Englisch, alles andere auf Deutsch.
 ## Die eine Regel, die alles zusammenhält
 
 `data/master-system.json` ist die einzige Datenquelle für die Zahlen,
-`data/mnemonica.json` die für den Kartenstapel. Nach jeder inhaltlichen
-Änderung:
+`data/mnemonica.json` die Stapelreihenfolge, `data/kartensystem.json` die
+Kartenwörter. Nach jeder inhaltlichen Änderung:
 
 ```
 python tools/inject_data.py     # schreibt die Daten in index.html
@@ -33,7 +33,9 @@ Der Encoder existiert zweimal: `encode()` in `tools/mastersystem.py` und
 ändert, ändert den anderen mit.
 
 `tools/stack.py` prüft den Kartenstapel: 52 Positionen, jede Karte genau einmal.
-`inject_data.py` schreibt beide Datenblöcke und bricht bei jedem Problem ab.
+`tools/karten.py` rechnet jedes Kartenwort über dieselbe Konsonantenregel zurück
+und prüft, dass es zu Farbe und Wert passt und nicht schon ein Zahlwort ist.
+`inject_data.py` schreibt alle drei Datenblöcke und bricht bei jedem Problem ab.
 
 ## Was den Nutzern gehört
 

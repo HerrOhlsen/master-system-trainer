@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import karten  # noqa: E402
 import mastersystem  # noqa: E402
 import stack  # noqa: E402
 
@@ -19,6 +20,8 @@ START = "<!-- DATA:START -->"
 END = "<!-- DATA:END -->"
 STACK_START = "<!-- STACK:START -->"
 STACK_END = "<!-- STACK:END -->"
+KARTEN_START = "<!-- KARTEN:START -->"
+KARTEN_END = "<!-- KARTEN:END -->"
 
 
 def replace(html, start, end, block):
@@ -32,7 +35,10 @@ def replace(html, start, end, block):
 def main():
     data = mastersystem.load()
     stack_data = stack.load()
-    problems = mastersystem.check(data) + stack.check(stack_data)
+    karten_data = karten.load()
+    problems = (mastersystem.check(data)
+                + stack.check(stack_data)
+                + karten.check(karten_data, karten.zahlwoerter_aus(data)))
     if problems:
         print("Abbruch, Daten sind nicht sauber:")
         for problem in problems:
@@ -41,6 +47,7 @@ def main():
 
     payload = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
     stack_payload = json.dumps(stack_data, ensure_ascii=False, separators=(",", ":"))
+    karten_payload = json.dumps(karten_data, ensure_ascii=False, separators=(",", ":"))
 
     html = INDEX.read_text(encoding="utf-8")
     html = replace(html, START, END,
@@ -53,10 +60,16 @@ def main():
     if html is None:
         print("Marker STACK nicht gefunden.")
         return 1
+    html = replace(html, KARTEN_START, KARTEN_END,
+                   f'{KARTEN_START}\n<script id="karten-data" type="application/json">{karten_payload}</script>\n{KARTEN_END}')
+    if html is None:
+        print("Marker KARTEN nicht gefunden.")
+        return 1
 
     INDEX.write_text(html, encoding="utf-8")
-    print(f"{len(data['eintraege'])} Einträge und {len(stack_data['stapel'])} Karten in index.html eingebettet "
-          f"({(len(payload) + len(stack_payload)) / 1024:.1f} KB).")
+    total = len(payload) + len(stack_payload) + len(karten_payload)
+    print(f"{len(data['eintraege'])} Einträge, {len(stack_data['stapel'])} Stapelplätze und "
+          f"{len(karten_data['karten'])} Kartenwörter in index.html eingebettet ({total / 1024:.1f} KB).")
     return 0
 
 

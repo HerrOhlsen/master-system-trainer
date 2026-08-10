@@ -208,6 +208,9 @@ input{font:inherit}
 .kartenzeile{display:flex;align-items:baseline;justify-content:center;gap:14px;flex-wrap:wrap}
 .kartenbild{font-family:var(--serif);font-size:19px;color:var(--paper-dim);margin-top:10px}
 .opt .karte{font-size:23px}
+.opt .optwort{font-family:var(--serif);font-size:13px;color:var(--paper-dim);margin-top:3px}
+.kartenwort{font-family:var(--serif);font-size:clamp(24px,7vw,32px);margin-top:8px}
+.note.ok{color:var(--sage)}
 
 /* -------------------------------------------------------------- drill */
 .progressbar{height:3px;background:var(--line);border-radius:2px;overflow:hidden;margin-bottom:26px}
@@ -432,8 +435,30 @@ input{font:inherit}
       <button data-stackmode="s-p2c"><span class="t">Position zu Karte<small>Was liegt auf 34?</small></span><span class="chev">›</span></button>
       <button data-stackmode="s-c2p"><span class="t">Karte zu Position<small>Wo liegt Herz-Bube?</small></span><span class="chev">›</span></button>
       <button data-stackmode="s-next"><span class="t">Nachbarn<small>Welche Karte kommt danach?</small></span><span class="chev">›</span></button>
-      <button id="btn-karten"><span class="t">Alle 52 Karten<small>Deine Kartenbilder pflegen</small></span><span class="chev">›</span></button>
+      <button id="btn-karten"><span class="t">Alle 52 Karten<small>Merkwörter und Bilder pflegen</small></span><span class="chev">›</span></button>
+      <button id="btn-kwerk"><span class="t">Kartenwerkstatt<small>Wort eingeben, Karte zurückrechnen</small></span><span class="chev">›</span></button>
     </div>
+  </section>
+
+  <!-- ==================================================== KARTENWERKSTATT -->
+  <section id="view-kwerk" class="view">
+    <div class="topbar">
+      <button class="back" id="kwerk-back">‹ Zurück</button>
+      <h1>Kartenwerkstatt</h1>
+    </div>
+    <p class="small muted" style="margin-top:0">
+      Der erste Konsonant trägt die Farbe, die folgenden den Wert. Tippe ein Wort ein, und die Werkstatt sagt dir,
+      welche Karte darin steckt, und warnt, wenn das Wort schon anderswo vergeben ist.
+    </p>
+    <div class="field">
+      <label for="kwerk-input">Wort</label>
+      <input id="kwerk-input" type="text" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Katze">
+    </div>
+    <div id="kwerk-out" style="margin-top:22px"></div>
+
+    <div class="section-title">Die Farben</div>
+    <table class="tablelist" id="kwerk-table"></table>
+    <p class="note">Bube, Dame und König lassen sich nicht codieren, weil alle Konsonanten von 0 bis 9 vergeben sind. Sie sind Personen: die Art der Person nennt den Rang, der Anfangslaut die Farbe.</p>
   </section>
 
   <!-- ============================================================ KARTEN -->
@@ -556,8 +581,12 @@ input{font:inherit}
 <!-- DATA:END -->
 
 <!-- STACK:START -->
-<script id="stack-data" type="application/json">{"quelle":"Juan Tamariz, Mnemonica","hinweis":"Reihenfolge von Position 1 (oben im Stapel) bis 52. Kuerzel: A 2 3 4 5 6 7 8 9 10 J Q K, Farben C = Kreuz, D = Karo, H = Herz, S = Pik.","stapel":["4C","2H","7D","3C","4H","6D","AS","5H","9S","2S","QH","3D","QC","8H","6S","5S","9H","KC","2D","JH","3S","8S","6H","10C","5D","KD","2C","3H","8D","5C","KS","JD","8C","10S","KH","JC","7S","10H","AD","4S","7H","4D","AC","9C","JS","QD","7C","QS","10D","6C","AH","9D"]}</script>
+<script id="stack-data" type="application/json">{"quelle":"Juan Tamariz, Mnemonica","hinweis":"Reihenfolge von Position 1 (oben im Stapel) bis 52. Kürzel: A 2 3 4 5 6 7 8 9 10 J Q K, Farben C = Kreuz, D = Karo, H = Herz, S = Pik.","stapel":["4C","2H","7D","3C","4H","6D","AS","5H","9S","2S","QH","3D","QC","8H","6S","5S","9H","KC","2D","JH","3S","8S","6H","10C","5D","KD","2C","3H","8D","5C","KS","JD","8C","10S","KH","JC","7S","10H","AD","4S","7H","4D","AC","9C","JS","QD","7C","QS","10D","6C","AH","9D"]}</script>
 <!-- STACK:END -->
+
+<!-- KARTEN:START -->
+<script id="karten-data" type="application/json">{"quelle":"Konsonantenregel nach Stenger, Farbbuchstaben z (Kreuz), k (Karo), p (Pik), h (Herz)","regeln":["Der erste Konsonant trägt die Farbe: z für Kreuz, k für Karo, p für Pik, h für Herz. Gleichwertige Buchstaben sind erlaubt, weil das Master-System sie ohnehin gleich zählt: s statt z, g oder c statt k, b statt p.","Die folgenden Konsonanten tragen den Wert: Ass = 1, dann 2 bis 9 wie gehabt, die 10 als 1 und 0.","Herz trägt keine Ziffer, weil h im Master-System frei ist. Ein Herzwort codiert deshalb nur den Wert.","Bube, Dame und König gehen nicht phonetisch, weil alle Konsonanten von 0 bis 9 belegt sind. Sie sind Personen: die Art der Person nennt den Rang, der Anfangskonsonant die Farbe.","Kartenwörter dürfen nicht mit den Zahlwörtern kollidieren, sonst kämpfen zwei Bilder um denselben Platz."],"karten":[{"karte":"AC","wort":"Zeit","art":"phonetisch","bild":"Bahnhofsuhr, deren Zeiger springt"},{"karte":"2C","wort":"Zaun","art":"phonetisch","bild":"weiß gestrichener Gartenzaun mit fehlender Latte"},{"karte":"3C","wort":"Zaum","art":"phonetisch","bild":"Lederzaum, der einem Pferd über die Nase gezogen wird"},{"karte":"4C","wort":"Azur","art":"phonetisch","bild":"azurblauer Himmel ohne eine einzige Wolke"},{"karte":"5C","wort":"Zelle","art":"phonetisch","bild":"Gefängniszelle mit Gitter und Pritsche"},{"karte":"6C","wort":"Zeche","art":"phonetisch","bild":"Bierdeckel voller Striche, die Rechnung am Tresen"},{"karte":"7C","wort":"Zecke","art":"phonetisch","bild":"vollgesogene Zecke, die du mit der Pinzette drehst"},{"karte":"8C","wort":"Zofe","art":"phonetisch","bild":"Zofe mit Haube, die einen Rock hinterherträgt"},{"karte":"9C","wort":"Suppe","art":"phonetisch","bild":"dampfender Suppenteller, Löffel steht senkrecht darin"},{"karte":"10C","wort":"Sitz","art":"phonetisch","bild":"durchgesessener Autositz, aus dem Schaumstoff quillt"},{"karte":"JC","wort":"Zorro","art":"person","bild":"junger Maskierter, der ein Z in die Wand ritzt"},{"karte":"QC","wort":"Zarin","art":"person","bild":"Zarin im Hermelinmantel vor goldener Wand"},{"karte":"KC","wort":"Zeus","art":"person","bild":"Zeus auf der Wolke, Blitz in der Faust"},{"karte":"AD","wort":"Kutte","art":"phonetisch","bild":"braune Mönchskutte mit Strick um den Bauch"},{"karte":"2D","wort":"Kanu","art":"phonetisch","bild":"Kanu, das in einen stillen See gleitet"},{"karte":"3D","wort":"Gummi","art":"phonetisch","bild":"Gummiband, das dir um die Finger schnalzt"},{"karte":"4D","wort":"Krähe","art":"phonetisch","bild":"Krähe auf dem Zaunpfahl, die dich schief ansieht"},{"karte":"5D","wort":"Koala","art":"phonetisch","bild":"Koala, der sich verschlafen an den Ast klammert"},{"karte":"6D","wort":"Küche","art":"phonetisch","bild":"eure Küche, in der etwas überkocht"},{"karte":"7D","wort":"Gecko","art":"phonetisch","bild":"Gecko, der kopfüber an der Fensterscheibe klebt"},{"karte":"8D","wort":"Kiwi","art":"phonetisch","bild":"aufgeschnittene Kiwi, grün mit schwarzen Kernen"},{"karte":"9D","wort":"Kopie","art":"phonetisch","bild":"Kopierer, der Blatt um Blatt ausspuckt"},{"karte":"10D","wort":"Katze","art":"phonetisch","bild":"Katze, die sich am Türrahmen streckt"},{"karte":"JD","wort":"Kellner","art":"person","bild":"Kellner mit Tablett auf einer Hand, Serviette über dem Arm"},{"karte":"QD","wort":"Krankenschwester","art":"person","bild":"Schwester in Weiß mit Spritze in der Hand"},{"karte":"KD","wort":"Kaiser","art":"person","bild":"Kaiser mit Krone und Reichsapfel auf dem Thron"},{"karte":"AS","wort":"Pute","art":"phonetisch","bild":"Pute, die kollernd auf dich zuläuft"},{"karte":"2S","wort":"Pony","art":"phonetisch","bild":"dickes Pony mit zottiger Mähne"},{"karte":"3S","wort":"Puma","art":"phonetisch","bild":"Puma, der sich lautlos duckt"},{"karte":"4S","wort":"Pier","art":"phonetisch","bild":"Holzsteg, der weit ins Wasser hinausläuft"},{"karte":"5S","wort":"Pille","art":"phonetisch","bild":"riesige Pille, die du kaum schlucken kannst"},{"karte":"6S","wort":"Pech","art":"phonetisch","bild":"schwarzes Pech, das zäh vom Eimerrand tropft"},{"karte":"7S","wort":"Puck","art":"phonetisch","bild":"Eishockeypuck, der über das Eis schlittert"},{"karte":"8S","wort":"Pfau","art":"phonetisch","bild":"Pfau, der mit einem Ruck sein Rad schlägt"},{"karte":"9S","wort":"Pappe","art":"phonetisch","bild":"Pappkarton, der unter der Last einknickt"},{"karte":"10S","wort":"Petze","art":"phonetisch","bild":"Kind, das mit ausgestrecktem Finger petzt"},{"karte":"JS","wort":"Punk","art":"person","bild":"Punk mit grünem Irokesen und Sicherheitsnadeln"},{"karte":"QS","wort":"Piratin","art":"person","bild":"Piratin mit Augenklappe und Säbel"},{"karte":"KS","wort":"Papst","art":"person","bild":"Papst in Weiß, der vom Balkon segnet"},{"karte":"AH","wort":"Hut","art":"phonetisch","bild":"steifer Zylinder, den du dir aufsetzt"},{"karte":"2H","wort":"Hahn","art":"phonetisch","bild":"Hahn auf dem Mist, der dich ankräht"},{"karte":"3H","wort":"Heim","art":"phonetisch","bild":"warm erleuchtetes Haus im Regen"},{"karte":"4H","wort":"Haar","art":"phonetisch","bild":"Büschel Haare, das im Abfluss hängt"},{"karte":"5H","wort":"Heli","art":"phonetisch","bild":"Hubschrauber, der Staub aufwirbelt"},{"karte":"6H","wort":"Hoch","art":"phonetisch","bild":"großes H auf der Wetterkarte, Sonne dahinter"},{"karte":"7H","wort":"Hecke","art":"phonetisch","bild":"frisch geschnittene Hecke, Blätter am Boden"},{"karte":"8H","wort":"Huf","art":"phonetisch","bild":"Huf, der aufgehoben und ausgekratzt wird"},{"karte":"9H","wort":"Hupe","art":"phonetisch","bild":"Ballhupe am Fahrrad, die du zusammendrückst"},{"karte":"10H","wort":"Hitze","art":"phonetisch","bild":"flimmernde Luft über heißem Asphalt"},{"karte":"JH","wort":"Hippie","art":"person","bild":"Hippie mit Blumen im Haar und Schlaghose"},{"karte":"QH","wort":"Hexe","art":"person","bild":"Hexe mit Warze, die den Kessel rührt"},{"karte":"KH","wort":"Häuptling","art":"person","bild":"Häuptling mit Federschmuck am Lagerfeuer"}]}</script>
+<!-- KARTEN:END -->
 
 <script>
 "use strict";
@@ -1720,6 +1749,18 @@ const SUITS = {
   H: {zeichen: "♥", name: "Herz", rot: true},
   S: {zeichen: "♠", name: "Pik", rot: false},
 };
+/* Die Merkwörter der Karten: erster Konsonant die Farbe, der Rest der Wert.
+   Bube, Dame und König sind Personen, sie codieren nichts. Eigene Wörter aus
+   state.stack.bilder gehen vor. */
+const KARTEN = (() => {
+  const map = new Map();
+  try{
+    for(const eintrag of JSON.parse($("#karten-data").textContent).karten || []){
+      map.set(eintrag.karte, eintrag);
+    }
+  }catch(e){ /* ohne Wörter läuft der Stapel trotzdem, nur nackt */ }
+  return map;
+})();
 const STACK_BLOCK = 13;
 /* "next" wird geübt und gewertet, zählt aber nicht in die Farbe des Rasters:
    wer beide Richtungen kann, kennt die Nachbarn ohnehin. */
@@ -1737,9 +1778,43 @@ function renderKarte(code){
   span.appendChild(el("span", "f", suit.zeichen));
   return span;
 }
+function kartenEintrag(code){ return KARTEN.get(code) || null; }
+function kartenWort(code){
+  const own = state.stack.bilder[code];
+  if(own && own.wort) return own.wort;
+  const eintrag = kartenEintrag(code);
+  return eintrag ? eintrag.wort : "";
+}
 function kartenbild(code){
   const own = state.stack.bilder[code];
-  return (own && own.bild) ? own.bild : "";
+  if(own && own.bild) return own.bild;
+  const eintrag = kartenEintrag(code);
+  return (eintrag && !(own && own.wort)) ? eintrag.bild : "";
+}
+function istPerson(code){
+  const eintrag = kartenEintrag(code);
+  return !!eintrag && eintrag.art === "person";
+}
+/* Ein Wort in eine Karte zurückrechnen. Die erste Ziffer nennt die Farbe,
+   0 Kreuz, 7 Karo, 9 Pik. Fehlt sie, ist es Herz, denn h trägt keine Ziffer,
+   und ein einstelliger Code kann deshalb nur eine Herzkarte sein. */
+const FARB_ZIFFERN = {"0": "C", "7": "D", "9": "S"};
+const WERT_AUS_CODE = {
+  "1": "A", "2": "2", "3": "3", "4": "4", "5": "5",
+  "6": "6", "7": "7", "8": "8", "9": "9", "10": "10",
+};
+function kartenAusWort(wort){
+  const code = encode(wort);
+  if(!code) return {code, karte: null, grund: "Das Wort enthält keinen Konsonanten, der eine Ziffer trägt."};
+  let farbe = "H";
+  let rest = code;
+  if(code.length > 1 && FARB_ZIFFERN[code[0]]){
+    farbe = FARB_ZIFFERN[code[0]];
+    rest = code.slice(1);
+  }
+  const wert = WERT_AUS_CODE[rest];
+  if(!wert) return {code, karte: null, grund: `${rest} ist kein Kartenwert, gültig sind 1 bis 10.`};
+  return {code, karte: wert + farbe, farbe, wert, grund: ""};
 }
 function stackBlockOf(position){ return Math.floor((position - 1) / STACK_BLOCK); }
 function stackBlockLabel(block){ return `${block * STACK_BLOCK + 1}–${Math.min(STACK.length, (block + 1) * STACK_BLOCK)}`; }
@@ -1870,10 +1945,13 @@ function renderStackIntro(task){
   peg.className = "word";
   peg.style.fontSize = "26px";
   prompt.appendChild(peg);
+  const wort = kartenWort(code);
+  if(wort){
+    const kw = el("div", "kartenwort", wort);
+    prompt.appendChild(kw);
+  }
   const bild = kartenbild(code);
-  prompt.appendChild(el("div", "kartenbild", bild
-    ? `${karteText(code)} ist bei dir: ${bild}`
-    : `Für ${karteText(code)} hast du noch kein Bild.`));
+  if(bild) prompt.appendChild(el("div", "kartenbild", bild));
   const link = state.stack.links[position];
   if(link) prompt.appendChild(el("p", "note", link));
 
@@ -1891,7 +1969,9 @@ function renderStackIntro(task){
   buttons.appendChild(known);
   buttons.appendChild(learn);
   answer.appendChild(buttons);
-  $("#drill-hint").textContent = `Verknüpfe ${wordFor(position)} mit ${karteText(code)} zu einer Szene, die wehtut oder lacht.`;
+  $("#drill-hint").textContent = wort
+    ? `Verknüpfe ${wordFor(position)} mit ${wort} zu einer Szene, die wehtut oder lacht.`
+    : `Verknüpfe ${wordFor(position)} mit ${karteText(code)} zu einer Szene, die wehtut oder lacht.`;
 }
 function kartenOptionen(position, count){
   const pool = STACK.map((code, index) => index + 1).filter(p => p !== position);
@@ -1905,7 +1985,10 @@ function kartenGitter(richtig, options, onPick){
   const grid = el("div", "options");
   for(const code of shuffle(options)){
     const button = el("button", "opt");
+    button.dataset.karte = code;
     button.appendChild(renderKarte(code));
+    const wort = kartenWort(code);
+    if(wort) button.appendChild(el("div", "optwort", wort));
     button.addEventListener("click", () => {
       if(drill.answered) return;
       drill.answered = true;
@@ -1913,7 +1996,7 @@ function kartenGitter(richtig, options, onPick){
       button.classList.add(correct ? "right" : "wrong");
       if(!correct){
         [...grid.children].forEach(child => {
-          if(child.textContent === karteText(richtig)) child.classList.add("right");
+          if(child.dataset.karte === richtig) child.classList.add("right");
         });
       }
       onPick(correct);
@@ -1950,6 +2033,8 @@ function renderPositionToCard(task){
       const shown = renderKarte(code);
       shown.classList.add("bigkarte", "reveal");
       prompt.appendChild(shown);
+      const wort = kartenWort(code);
+      if(wort) prompt.appendChild(el("div", "kartenwort", wort));
       const bild = kartenbild(code);
       if(bild) prompt.appendChild(el("div", "kartenbild", bild));
       answer.textContent = "";
@@ -1987,8 +2072,8 @@ function renderCardToPosition(task){
   prompt.textContent = "";
   prompt.appendChild(el("div", "ask", "Auf welcher Position?"));
   prompt.appendChild(stackHead(position, {zahl: false}));
-  const bild = kartenbild(code);
-  if(bild) prompt.appendChild(el("div", "kartenbild", bild));
+  const wort = kartenWort(code);
+  if(wort) prompt.appendChild(el("div", "kartenwort", wort));
 
   const answer = $("#drill-answer");
   answer.textContent = "";
@@ -2130,6 +2215,8 @@ function openStackPosition(position){
   });
 }
 function openKarte(code){
+  const eintrag = kartenEintrag(code);
+  const own = state.stack.bilder[code] || {};
   openSheet(sheet => {
     const head = el("div", "kartenzeile");
     head.style.justifyContent = "flex-start";
@@ -2138,24 +2225,63 @@ function openKarte(code){
     head.appendChild(card);
     head.appendChild(el("div", "small muted", karteName(code)));
     sheet.appendChild(head);
-    sheet.appendChild(el("p", "note", `Liegt im Stapel auf Position ${STACK.indexOf(code) + 1}.`));
+    if(eintrag){
+      const vorschlag = el("p", "note");
+      vorschlag.textContent = eintrag.art === "person"
+        ? `Vorschlag: ${eintrag.wort}. Bildkarten codieren nichts, die Art der Person nennt den Rang, der Anfangslaut die Farbe.`
+        : `Vorschlag: ${eintrag.wort}, aus ${suitOf(code).name} und ${valueOf(code)}.`;
+      sheet.appendChild(vorschlag);
+      if(eintrag.bild) sheet.appendChild(el("p", "note", eintrag.bild));
+    }
+    if(STACK.includes(code)) sheet.appendChild(el("p", "note", `Liegt im Stapel auf Position ${STACK.indexOf(code) + 1}.`));
 
-    const field = el("div", "field");
-    field.appendChild(el("label", null, "Dein Bild für diese Karte"));
-    const input = el("input");
-    input.type = "text";
-    input.autocapitalize = "sentences";
-    input.placeholder = "Was siehst du?";
-    input.value = kartenbild(code);
-    field.appendChild(input);
-    sheet.appendChild(field);
-    sheet.appendChild(el("p", "note", "Das Bild gehört der Karte, nicht der Position. Es bleibt dasselbe, egal welchen Stapel du lernst."));
+    const fieldWord = el("div", "field");
+    fieldWord.appendChild(el("label", null, "Dein eigenes Wort (optional)"));
+    const inputWord = el("input");
+    inputWord.type = "text";
+    inputWord.autocapitalize = "words";
+    inputWord.spellcheck = false;
+    inputWord.placeholder = eintrag ? eintrag.wort : "";
+    inputWord.value = own.wort || "";
+    fieldWord.appendChild(inputWord);
+    const check = el("p", "note");
+    fieldWord.appendChild(check);
+    sheet.appendChild(fieldWord);
+    /* Sofort sagen, ob das eigene Wort zur Karte passt. Verboten wird nichts,
+       Bildkarten lassen sich ohnehin nicht codieren. */
+    const validate = () => {
+      const value = inputWord.value.trim();
+      if(!value || istPerson(code)){ check.textContent = ""; check.className = "note"; return; }
+      const gefunden = kartenAusWort(value);
+      if(gefunden.karte === code){
+        check.textContent = `passt: ${encode(value)} ist ${karteText(code)}`;
+        check.className = "note ok";
+      }else{
+        check.textContent = gefunden.karte
+          ? `Achtung: ${value} codiert ${karteText(gefunden.karte)}, nicht ${karteText(code)}`
+          : `Achtung: ${value} ergibt ${encode(value) || "keine Ziffer"} und damit keine Karte`;
+        check.className = "note warn";
+      }
+    };
+    inputWord.addEventListener("input", validate);
+    validate();
+
+    const fieldNote = el("div", "field");
+    fieldNote.appendChild(el("label", null, "Dein Bild dazu"));
+    const inputNote = el("input");
+    inputNote.type = "text";
+    inputNote.placeholder = "Was siehst du genau?";
+    inputNote.value = own.bild || "";
+    fieldNote.appendChild(inputNote);
+    sheet.appendChild(fieldNote);
+    sheet.appendChild(el("p", "note", "Wort und Bild gehören der Karte, nicht der Position. Sie bleiben, auch wenn du irgendwann einen anderen Stapel lernst."));
 
     const buttons = el("div", "rowbtns");
     const saveBtn = el("button", "btn", "Sichern");
     saveBtn.addEventListener("click", () => {
-      const value = input.value.trim();
-      if(value) state.stack.bilder[code] = {bild: value};
+      const wort = inputWord.value.trim();
+      const bild = inputNote.value.trim();
+      if(wort || bild) state.stack.bilder[code] = Object.assign({}, wort ? {wort} : {}, bild ? {bild} : {});
       else delete state.stack.bilder[code];
       save();
       closeSheet();
@@ -2169,31 +2295,103 @@ function openKarte(code){
     sheet.appendChild(buttons);
   });
 }
-function renderKartenListe(){
-  const table = $("#karten-table");
-  table.textContent = "";
+const KARTEN_REIHENFOLGE = (() => {
   const order = ["S", "H", "D", "C"];
   const values = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
   const codes = [];
   for(const suit of order){
     for(const value of values){
-      if(STACK.includes(value + suit)) codes.push(value + suit);
+      if(STACK.includes(value + suit) || KARTEN.has(value + suit)) codes.push(value + suit);
     }
   }
-  for(const code of codes){
+  return codes;
+})();
+function renderKartenListe(){
+  const table = $("#karten-table");
+  table.textContent = "";
+  for(const code of KARTEN_REIHENFOLGE){
     const row = table.insertRow();
     const cardCell = row.insertCell();
     cardCell.className = "n";
     cardCell.appendChild(renderKarte(code));
-    const imageCell = row.insertCell();
-    imageCell.className = "w";
+    const wordCell = row.insertCell();
+    wordCell.className = "w";
+    const wort = kartenWort(code);
+    wordCell.textContent = wort || "noch kein Wort";
+    if(!wort) wordCell.style.color = "var(--paper-dim)";
+    const eigen = state.stack.bilder[code];
+    if(eigen && eigen.wort) wordCell.appendChild(el("span", "small muted", " eigen"));
     const bild = kartenbild(code);
-    imageCell.textContent = bild || "noch kein Bild";
-    if(!bild) imageCell.style.color = "var(--paper-dim)";
+    if(bild){
+      const note = el("div", "small muted", bild);
+      note.style.marginTop = "2px";
+      wordCell.appendChild(note);
+    }
     const positionCell = row.insertCell();
     positionCell.className = "a";
-    positionCell.textContent = "Pos " + (STACK.indexOf(code) + 1);
+    positionCell.textContent = STACK.includes(code) ? "Pos " + (STACK.indexOf(code) + 1) : "";
     row.addEventListener("click", () => openKarte(code));
+  }
+}
+
+/* --- Kartenwerkstatt --------------------------------------------- */
+function renderKartenWerkstatt(){
+  const table = $("#kwerk-table");
+  table.textContent = "";
+  const zeilen = [
+    ["Kreuz", "z, auch s", "0"],
+    ["Karo", "k, auch c und g", "7"],
+    ["Pik", "p, auch b", "9"],
+    ["Herz", "h", "keine, h ist frei"],
+  ];
+  for(const [farbe, buchstaben, ziffer] of zeilen){
+    const row = table.insertRow();
+    const first = row.insertCell();
+    first.className = "n";
+    const code = {Kreuz: "C", Karo: "D", Pik: "S", Herz: "H"}[farbe];
+    first.appendChild(renderKarte("A" + code));
+    const second = row.insertCell();
+    second.className = "w";
+    second.textContent = farbe + ": " + buchstaben;
+    const third = row.insertCell();
+    third.className = "a";
+    third.textContent = ziffer;
+  }
+  zeigeKartenWort($("#kwerk-input").value);
+}
+function zeigeKartenWort(wort){
+  const out = $("#kwerk-out");
+  out.textContent = "";
+  const value = (wort || "").trim();
+  if(!value){
+    out.appendChild(el("p", "muted", "Noch nichts eingetippt."));
+    return;
+  }
+  out.appendChild(renderBreakdown(value));
+  const gefunden = kartenAusWort(value);
+  const zeile = el("div", "kartenzeile");
+  zeile.style.marginTop = "16px";
+  if(gefunden.karte){
+    const karte = renderKarte(gefunden.karte);
+    karte.style.fontSize = "40px";
+    zeile.appendChild(karte);
+    zeile.appendChild(el("div", "small muted", karteName(gefunden.karte)));
+    out.appendChild(zeile);
+  }else{
+    out.appendChild(el("p", "note warn", gefunden.grund));
+  }
+
+  const vergeben = ENTRIES.find(e => e.wort === value || e.alternativen.includes(value));
+  if(vergeben){
+    out.appendChild(el("p", "note warn",
+      `Achtung: ${value} ist schon das Merkwort für die Zahl ${label(vergeben.zahl)}. Zwei Bilder auf einem Wort vertragen sich schlecht.`));
+  }
+  const belegt = KARTEN_REIHENFOLGE.find(code => kartenWort(code) === value);
+  if(belegt && belegt !== gefunden.karte){
+    out.appendChild(el("p", "note warn", `${value} steht außerdem schon bei ${karteText(belegt)}.`));
+  }
+  if(gefunden.karte && istPerson(gefunden.karte)){
+    out.appendChild(el("p", "note", "Für Bildkarten zählt die Codierung nicht, dort entscheidet die Art der Person."));
   }
 }
 
@@ -2430,6 +2628,9 @@ document.querySelectorAll(".menu button").forEach(button => {
 $("#stack-back").addEventListener("click", () => { renderHome(); show("home"); });
 $("#karten-back").addEventListener("click", () => { renderStack(); show("stack"); });
 $("#btn-karten").addEventListener("click", () => { renderKartenListe(); show("karten"); });
+$("#btn-kwerk").addEventListener("click", () => { renderKartenWerkstatt(); show("kwerk"); });
+$("#kwerk-back").addEventListener("click", () => { renderStack(); show("stack"); });
+$("#kwerk-input").addEventListener("input", event => zeigeKartenWort(event.target.value));
 $("#stack-practice").addEventListener("click", () => startSession("s-heute"));
 document.querySelectorAll("[data-stackmode]").forEach(button => {
   button.addEventListener("click", () => startSession(button.dataset.stackmode));
