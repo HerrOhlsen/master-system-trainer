@@ -11,7 +11,9 @@ Christiane Stengers „Warum fällt das Schaf vom Baum?".
 |---|---|
 | `index.html` | Die komplette App: Markup, Styles, Logik und die eingebetteten Daten |
 | `data/master-system.json` | Die Datenquelle. Hier wird inhaltlich geändert, nirgends sonst |
+| `data/mnemonica.json` | Die Stapelreihenfolge für den Kartenbereich |
 | `tools/mastersystem.py` | Encoder und Konsistenzprüfung, gemeinsame Basis der Skripte |
+| `tools/stack.py` | Prüft den Kartenstapel auf Vollständigkeit |
 | `tools/inject_data.py` | Schreibt die JSON-Daten in `index.html` |
 | `tools/build_docx.py` | Baut den druckbaren Spickzettel |
 | `tools/build_icons.py` | Erzeugt die App-Icons |
@@ -83,6 +85,27 @@ schon vor dem ersten Bildaufbau, damit nichts aufblitzt.
 Voreinstellung ist „Automatisch", die App folgt dann dem Systemmodus und
 reagiert auf einen Wechsel im laufenden Betrieb. In den Einstellungen lässt sich
 fest auf hell oder dunkel stellen.
+
+## Kartenstapel (Mnemonica)
+
+Zusatzbereich, hinter einem Schalter in den Einstellungen und voreingestellt
+aus. Er lernt die Reihenfolge eines gedächtnisgeordneten Kartenspiels, aktuell
+Mnemonica von Juan Tamariz aus `data/mnemonica.json`.
+
+Der Trick ist, dass die Positionen 1 bis 52 keine eigene Route brauchen: sie
+hängen an den Zahlenbildern, die hier ohnehin sitzen. Position 34 ist Meer,
+darauf liegt Pik-Zehn, fertig ist der Anker. Das gibt wahlfreien Zugriff in
+beide Richtungen, was eine Route nicht kann, denn dort müsste man immer von
+vorn durchlaufen.
+
+Vier Modi: Kennenlernen, Position zu Karte, Karte zu Position, Nachbarn. Dazu
+eine Liste aller 52 Karten, in der das eigene Bild pro Karte steht. Das Bild
+gehört der Karte, nicht der Position, und überlebt damit einen Stapelwechsel.
+Freigeschaltet wird in Blöcken zu 13.
+
+Gelernt wird mit derselben Leitner-Box wie die Zahlen, nur in einem eigenen
+Fächersatz unter `state.stack`. Die Zahlenkarten bleiben davon unberührt, und
+wer den Bereich nie einschaltet, merkt nichts davon.
 
 ## Offline und Updates
 

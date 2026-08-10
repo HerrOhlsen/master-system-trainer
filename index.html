@@ -198,6 +198,16 @@ input{font:inherit}
 .menu .t small{display:block;color:var(--paper-dim);font-size:12.5px;margin-top:1px}
 .menu .chev{color:var(--paper-dim)}
 .menu .badge{font-family:var(--mono);font-size:12px;color:var(--brass)}
+.menu button[hidden]{display:none}
+
+/* -------------------------------------------------------------- karten */
+.karte{font-family:var(--mono);white-space:nowrap}
+.karte .f{margin-left:.12em}
+.karte.rot{color:var(--rust)}
+.bigkarte{font-size:clamp(44px,15vw,74px);line-height:1.05}
+.kartenzeile{display:flex;align-items:baseline;justify-content:center;gap:14px;flex-wrap:wrap}
+.kartenbild{font-family:var(--serif);font-size:19px;color:var(--paper-dim);margin-top:10px}
+.opt .karte{font-size:23px}
 
 /* -------------------------------------------------------------- drill */
 .progressbar{height:3px;background:var(--line);border-radius:2px;overflow:hidden;margin-bottom:26px}
@@ -377,7 +387,66 @@ input{font:inherit}
       <button data-mode="reihe"><span class="t">Zahlenreihe merken<small>Der eigentliche Zweck des Systems</small></span><span class="chev">›</span></button>
       <button data-mode="werkstatt"><span class="t">Konsonanten-Werkstatt<small>Regel drillen und eigene Wörter prüfen</small></span><span class="chev">›</span></button>
       <button data-mode="liste"><span class="t">Alle Merkwörter<small>Nachschlagen</small></span><span class="chev">›</span></button>
+      <button data-mode="stack" id="menu-stack" hidden><span class="t">Kartenstapel<small>Mnemonica über die Zahlenbilder</small></span><span class="badge num" id="stack-badge"></span><span class="chev">›</span></button>
     </div>
+  </section>
+
+  <!-- ============================================================ STAPEL -->
+  <section id="view-stack" class="view">
+    <div class="topbar">
+      <button class="back" id="stack-back">‹ Zurück</button>
+      <h1>Kartenstapel</h1>
+    </div>
+
+    <div class="today">
+      <div class="eyebrow">Heute</div>
+      <div class="count num" id="stack-due">0</div>
+      <div class="small muted" id="stack-due-label">Karten fällig</div>
+      <button class="btn" id="stack-practice">Üben</button>
+      <div class="streak">
+        <div><b class="num" id="stack-mastered">0</b>von 52 sitzen</div>
+        <div><b class="num" id="stack-open">0</b>Positionen offen</div>
+      </div>
+    </div>
+
+    <div class="gridwrap">
+      <div class="gridhead">
+        <span class="eyebrow">Dein Stand</span>
+        <span class="small muted" style="font-family:var(--sans)">tippen für Details</span>
+      </div>
+      <div class="grid100" id="stack-grid"></div>
+      <div class="legend">
+        <span>neu</span>
+        <i></i><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i>
+        <span>sitzt</span>
+      </div>
+    </div>
+
+    <div class="eyebrow" style="margin-bottom:6px">Blöcke</div>
+    <div class="chips" id="stack-blocks"></div>
+    <p class="note" style="margin-top:-8px">Ein Block sind 13 Positionen. Nimm den nächsten erst dazu, wenn der aktuelle steht.</p>
+
+    <div class="eyebrow" style="margin:22px 0 6px">Gezielt üben</div>
+    <div class="menu">
+      <button data-stackmode="s-intro"><span class="t">Kennenlernen<small>Zahlbild, Karte und deine Verknüpfung</small></span><span class="chev">›</span></button>
+      <button data-stackmode="s-p2c"><span class="t">Position zu Karte<small>Was liegt auf 34?</small></span><span class="chev">›</span></button>
+      <button data-stackmode="s-c2p"><span class="t">Karte zu Position<small>Wo liegt Herz-Bube?</small></span><span class="chev">›</span></button>
+      <button data-stackmode="s-next"><span class="t">Nachbarn<small>Welche Karte kommt danach?</small></span><span class="chev">›</span></button>
+      <button id="btn-karten"><span class="t">Alle 52 Karten<small>Deine Kartenbilder pflegen</small></span><span class="chev">›</span></button>
+    </div>
+  </section>
+
+  <!-- ============================================================ KARTEN -->
+  <section id="view-karten" class="view">
+    <div class="topbar">
+      <button class="back" id="karten-back">‹ Zurück</button>
+      <h1>Kartenbilder</h1>
+    </div>
+    <p class="small muted" style="margin-top:0">
+      Jede Karte braucht ein eigenes Bild, unabhängig davon, wo sie im Stapel liegt. Erst wenn die 52 Bilder
+      stehen, lohnt sich das Verknüpfen mit den Positionen. Tippe eine Zeile an, um dein Bild einzutragen.
+    </p>
+    <table class="tablelist" id="karten-table"></table>
   </section>
 
   <!-- ============================================================ DRILL -->
@@ -452,6 +521,12 @@ input{font:inherit}
     </div>
     <p class="note">Bei zwei oder drei Wörtern stehen sie untereinander und du tippst die ganze Ziffernfolge am Stück, also gleich ein Paar oder ein Tripel. Ketten nehmen nur Zahlen ab 10, weil ein Wort für 0 bis 9 nur eine Ziffer trägt und die Reihe sonst verrutscht.</p>
 
+    <div class="field">
+      <label>Kartenstapel (Mnemonica)</label>
+      <div class="chips" id="set-stack" style="margin-bottom:0;margin-top:2px"></div>
+    </div>
+    <p class="note">Zusatzbereich, um die Reihenfolge eines gedächtnisgeordneten Kartenspiels über die Zahlenbilder zu lernen. Aus, solange du ihn nicht brauchst.</p>
+
     <div class="section-title">Freigeschaltet</div>
     <div class="chips" id="set-blocks"></div>
     <p class="note">Tippe einen Block an, um ihn frei- oder wieder abzuschalten. Nur freigeschaltete Zahlen werden abgefragt.</p>
@@ -479,6 +554,10 @@ input{font:inherit}
 <!-- DATA:START -->
 <script id="master-data" type="application/json">{"quelle":"Christiane Stenger: Warum fällt das Schaf vom Baum? Kapitel 'Das Master-System'","regeln":["Konsonanten tragen die Ziffern, Vokale sind frei und dienen nur dazu, sinnvolle Wörter zu bilden.","Doppelkonsonanten zählen nur einmal: 'Tanne' ist 12, nicht 122.","Vergessene Merkwörter lassen sich rekonstruieren: Konsonanten hinschreiben, dann Vokale der Reihe nach durchprobieren (a, e, i, o, u, dann au, ei, eu, ö, ü).","Merkwörter sind austauschbar. Wenn ein Bild nicht sitzt, ersetze es durch ein eigenes.","Jedes Wort immer als konkretes Bild vorstellen, nicht als Buchstabenfolge. Farben, Gerüche und Gefühle machen es haltbar."],"konsonanten":[{"ziffer":0,"buchstaben":["s","z","ß"],"anzeige":"s","eselsbruecke":"Zero heißt im Spanischen/Italienischen Null, das Z wird wie ein S ausgesprochen.","merkwort":"Sau"},{"ziffer":1,"buchstaben":["t","d"],"anzeige":"t, d","eselsbruecke":"Der Buchstabe t sieht aus wie 1.","merkwort":"Tee"},{"ziffer":2,"buchstaben":["n"],"anzeige":"n","eselsbruecke":"Das n hat zwei Beine.","merkwort":"Noah"},{"ziffer":3,"buchstaben":["m"],"anzeige":"m","eselsbruecke":"Das m sieht aus wie eine auf den Bauch gefallene 3 und hat außerdem drei Beine.","merkwort":"Mai"},{"ziffer":4,"buchstaben":["r"],"anzeige":"r","eselsbruecke":"Im Wort vier steckt das r.","merkwort":"Reh"},{"ziffer":5,"buchstaben":["l"],"anzeige":"l","eselsbruecke":"Das L ist im Lateinischen das Symbol für 50.","merkwort":"Lee"},{"ziffer":6,"buchstaben":["sch","ch"],"anzeige":"sch, ch","eselsbruecke":"Mit 6 geht man in die Schule.","merkwort":"Schuh"},{"ziffer":7,"buchstaben":["k","c","g"],"anzeige":"k","eselsbruecke":"Am 7. Tag geht man in die Kirche.","merkwort":"Kuh"},{"ziffer":8,"buchstaben":["f","v","w"],"anzeige":"f, v, w","eselsbruecke":"Das w ist ein doppeltes v, so wie die 8 eine doppelte Null ist.","merkwort":"Fee"},{"ziffer":9,"buchstaben":["p","b"],"anzeige":"p, b","eselsbruecke":"Die 9 ist das Spiegelbild eines großen P.","merkwort":"Po"}],"eintraege":[{"zahl":0,"wort":"Sau","alternativen":[],"bilder":["bunt bemaltes Sparschwein aus Kindertagen","quiekendes Ferkel, das du im Arm hältst und das herunterspringen will","Rennschwein Rudi Rüssel aus dem gleichnamigen Film","Ferkel im Gespräch mit Pu aus dem Kinderbuch Pu der Bär"]},{"zahl":1,"wort":"Tee","alternativen":[],"bilder":["dampfende Teetasse","Teepflückerin mit einem großen Korb auf dem Rücken","das Abschlagstee beim Golfen"]},{"zahl":2,"wort":"Noah","alternativen":[],"bilder":["alter Mann, der sich auf einen Stock stützt","zwei Elefanten, die ihre Rüssel miteinander verschlungen haben","Tiere, die paarweise auf ein Schiff zugehen"]},{"zahl":3,"wort":"Mai","alternativen":[],"bilder":["untergehende Sonne an einem noch kühlen, windigen Abend am Strand","duftende Maiglöckchen","ein Freund, der im Mai Geburtstag hat"]},{"zahl":4,"wort":"Reh","alternativen":[],"bilder":["Bambi aus dem Walt-Disney-Film, das dich mit seinen großen Augen anschaut","Reh im Wald"]},{"zahl":5,"wort":"Lee","alternativen":[],"bilder":["deine Lieblingsjeans (Jeansmarke Lee)","ein Foto von Lee Oswald, der John F. Kennedy ermordet haben soll"]},{"zahl":6,"wort":"Schuh","alternativen":[],"bilder":["spitze Schnabelschuhe wie aus einem Märchen aus 1001 Nacht","dein viel zu teurer Traumschuh","Aschenputtel, das den Schuh probiert"]},{"zahl":7,"wort":"Kuh","alternativen":[],"bilder":["lila Kuh","schwarz-weiße Kuh auf einer mit Löwenzahn übersäten Weide","frisch geborenes Kälbchen"]},{"zahl":8,"wort":"Fee","alternativen":[],"bilder":["die Fee deiner Träume"]},{"zahl":9,"wort":"Po","alternativen":["Pu"],"bilder":["Kinderpopo","Pu: Pu der Bär mit Honigglas"]},{"zahl":10,"wort":"Tasse","alternativen":[],"bilder":["deine Lieblingstasse, die gerade auf dem Boden zerbrochen ist"]},{"zahl":11,"wort":"Tod","alternativen":["Tat","Tüte"],"bilder":["Skelett","schwarzer Sensenmann","Tat: Pfadfinder, der eine gute Tat begeht","Tüte: bunte Tüte aus Weihnachtspapier"]},{"zahl":12,"wort":"Tanne","alternativen":["Tonne","Tenno"],"bilder":["Weihnachtsbaum (Achtung: 93 ist Baum)","Tannengruppe in deiner Umgebung","Tonne: Papiertonne oder Papierkorb","Tenno: Foto des japanischen Kaisers"]},{"zahl":13,"wort":"Team","alternativen":["Dame","Damm"],"bilder":["Foto einer Fußballmannschaft (Achtung: 83 ist WM)","Dame: Dame deiner Wahl","Damm: Erinnerung an den Spaziergang auf dem Damm entlang eines Flusses"]},{"zahl":14,"wort":"Teer","alternativen":[],"bilder":["Eimer mit Teer","Routenpunkt wird schwarz","Straßenwalze"]},{"zahl":15,"wort":"Tal","alternativen":[],"bilder":["die eigene Vorstellung von einem Blick in ein wunderschönes Tal","Gletscher, der ins Tal fließt"]},{"zahl":16,"wort":"Tasche","alternativen":[],"bilder":["bunte Sporttasche","deine Lieblingshandtasche"]},{"zahl":17,"wort":"Theke","alternativen":[],"bilder":["Theke in deiner Lieblingskneipe","Küchentheke","Ausschank im Biergarten"]},{"zahl":18,"wort":"Taufe","alternativen":["Tofu"],"bilder":["altmodischer Kinderwagen","Baby","Taufbecken","Tofu: dein Lieblingsgericht mit Tofu"]},{"zahl":19,"wort":"Taube","alternativen":[],"bilder":["Bild von Picasso","Taube mit Palmzweig im Schnabel","Friedenszeichen Peace"]},{"zahl":20,"wort":"Nase","alternativen":[],"bilder":["eine markante Nase eines Bekannten oder Freundes","ein besonders neugieriger Freund, dessen Nase den betreffenden Routenpunkt beschnuppert","die zitternde Nase eines Kaninchens"]},{"zahl":21,"wort":"Note","alternativen":["Naht"],"bilder":["Schulzeugnis und das damit verbundene mulmige Gefühl oder die Freude","Notenblatt","Erinnerung an die beste oder schlechteste Klausur","Naht: Faltenrock"]},{"zahl":22,"wort":"Nonne","alternativen":[],"bilder":["Whoopi Goldberg im Film Sister Act","Nonne auf einem Fahrrad"]},{"zahl":23,"wort":"Name","alternativen":["Nemo"],"bilder":["Stempel mit deinem Namen, den du auf ein rosa Blatt Papier drückst","Lichtprojektion deiner Unterschrift","Nemo: Käpt'n Nemo"]},{"zahl":24,"wort":"Narr","alternativen":[],"bilder":["du in einem bunten Harlekinkostüm","Narrenkappe mit klingenden Glöckchen","Clown, den du bei deinem letzten Zirkusbesuch erlebt hast"]},{"zahl":25,"wort":"Nil","alternativen":[],"bilder":["Nilpferd, das aus dem Wasser schaut und mit seinen kleinen Ohren wackelt","Fluss mit Palmen"]},{"zahl":26,"wort":"Nische","alternativen":[],"bilder":["eine in einer Nische stehende Madonna","der betreffende Routenpunkt wird ganz klein"]},{"zahl":27,"wort":"Nike","alternativen":["Nokia"],"bilder":["Nike-Zeichen","dein Lieblingsturnschuh","Nokia: dein eigenes Handy, das gerade klingelt"]},{"zahl":28,"wort":"Neffe","alternativen":[],"bilder":["ein kleiner Junge mit lachendem Gesicht","einer deiner Neffen"]},{"zahl":29,"wort":"Neubau","alternativen":["Nappa"],"bilder":["ein auffälliger Neubau in deiner Umgebung","Kuppel des Berliner Reichstags, hell beleuchtet bei Nacht","Nappa: deine Lieblingshandtasche aus Nappaleder"]},{"zahl":30,"wort":"Moos","alternativen":["Maus"],"bilder":["Waldboden mit Moos","Osterdekoration","Münzen: ohne Moos nichts los","Maus: Maus, die mit einer Rolltreppe auf den Routenpunkt fährt"]},{"zahl":31,"wort":"Matte","alternativen":[],"bilder":["Kunstturner auf einer Turnmatte","Fußbodenmatte vor deiner Wohnungstür"]},{"zahl":32,"wort":"Mann","alternativen":[],"bilder":["ein Mann deiner Wahl"]},{"zahl":33,"wort":"Mama","alternativen":[],"bilder":["Mama ist Mama"]},{"zahl":34,"wort":"Meer","alternativen":[],"bilder":["dein Traumstrand mit heftiger, tosender Brandung oder kristallklarem, smaragdgrünem Wasser","Eimer, der mit Meerwasser und Quallen gefüllt ist","große Muschel, in der man das Meeresrauschen hören kann"]},{"zahl":35,"wort":"Mehl","alternativen":[],"bilder":["Mehlsack","Windmühle","der Mehltopf in deiner Küche"]},{"zahl":36,"wort":"Masche","alternativen":[],"bilder":["ein selbst gehäkelter, blau-roter Topflappen","Routenpunkt wird weich, als ob er gestrickt wäre","schwarzer Strumpf an einem Frauenbein mit breiter, auffälliger Laufmasche"]},{"zahl":37,"wort":"Mac","alternativen":[],"bilder":["McDonald's-Restaurant","Hamburger"]},{"zahl":38,"wort":"Mafia","alternativen":["Möwe"],"bilder":["Gruppe von Männern in schwarzen Anzügen","schwarz-weiße Schuhe","Hauptfigur aus dem Film Der Pate","Möwe: einsame Möwe auf einer Buhne im Sturm"]},{"zahl":39,"wort":"Mappe","alternativen":[],"bilder":["Schnellhefter","eigene Aktenmappe"]},{"zahl":40,"wort":"Rose","alternativen":[],"bilder":["einzelne rote Rose","blühende Rosenhecke","rote, dicke Hagebutte"]},{"zahl":41,"wort":"Ratte","alternativen":[],"bilder":["ein ganzer Rattenschwarm, der auf dem Routenpunkt herumläuft","Rattenfänger von Hameln"]},{"zahl":42,"wort":"Ruine","alternativen":["RAN"],"bilder":["Kolosseum in Rom","RAN: Moderator der Fußballsendung"]},{"zahl":43,"wort":"Rum","alternativen":[],"bilder":["eine Rumflasche"]},{"zahl":44,"wort":"Rohr","alternativen":[],"bilder":["Routenpunkt besteht nur noch aus Rohren","mit Rohren eingerüstetes Haus","Panflöte aus Bambusrohr"]},{"zahl":45,"wort":"Rolle","alternativen":[],"bilder":["Küchenrolle","Planrolle","Verpackungsrolle"]},{"zahl":46,"wort":"Rauch","alternativen":[],"bilder":["Routenpunkt in Rauch eingehüllt","loderndes Feuer","indianisches Rauchzeichen"]},{"zahl":47,"wort":"Rock","alternativen":[],"bilder":["ein bestimmter Lieblingsrock","am Routenpunkt hängen ganz viele Röcke","die CD mit deiner liebsten Rockmusik"]},{"zahl":48,"wort":"Reif","alternativen":["Riff"],"bilder":["ein Hula-Hoop-Reifen","eine wundervolle Winterlandschaft mit Raureif","ein Zirkushund, der durch einen Reifen springt","Riff: Korallenriff unter Wasser mit herrlich bunten Fischen","Riff: Luftaufnahme einer Koralleninsel mit vorgelagertem Riff"]},{"zahl":49,"wort":"Raupe","alternativen":["Rappe"],"bilder":["eine dicke Raupe, die über ein Blatt kriecht","Raupe Nimmersatt","Rappe: Fury","Rappe: dein Pferd, falls du reitest"]},{"zahl":50,"wort":"Lasso","alternativen":["Los"],"bilder":["Lasso, das um den Routenpunkt gewickelt ist","Cowboy","Los: Glückslos einer Lotterie"]},{"zahl":51,"wort":"Latte","alternativen":[],"bilder":["Lattenrost","Routenpunkt aus Holz gezimmert"]},{"zahl":52,"wort":"Linie","alternativen":[],"bilder":["Routenpunkt ist zerkratzt","eine mit einem Stift gezogene Linie","liniertes Papier"]},{"zahl":53,"wort":"Lehm","alternativen":["Leim"],"bilder":["Lehmziegel","der Routenpunkt ist lehmverschmiert","Töpferscheibe","Leim: Erinnerung an das letzte Tapezieren ohne Fachmann"]},{"zahl":54,"wort":"Leier","alternativen":[],"bilder":["Leierkastenmann, eventuell mit Affe","griechische Lyra"]},{"zahl":55,"wort":"Lila","alternativen":[],"bilder":["Routenpunkt wird lila","irgendein lilafarbener Gegenstand, zum Beispiel ein Luftballon"]},{"zahl":56,"wort":"Loch","alternativen":["Lauch"],"bilder":["blaue Socke mit großem Loch an der Ferse","Sieb mit großen Löchern","Schweizer Käse (Achtung: 70 eventuell Käse)","Lauch: Kiste mit Lauch auf dem Bauernmarkt","Lauch: Lauch aus der frischen Erde ziehen"]},{"zahl":57,"wort":"Lack","alternativen":[],"bilder":["Flasche mit rotem Nagellack","Dose mit gelbem Farblack, die gerade umgekippt ist","chinesischer Lackschrank"]},{"zahl":58,"wort":"Lava","alternativen":["Löwe"],"bilder":["fließender, glühender Lavastrom","Lavastein, den du aus einem Urlaub mitgebracht hast","Löwe: Simba aus König der Löwen"]},{"zahl":59,"wort":"Lupe","alternativen":[],"bilder":["Nick Knatterton","Briefmarkenlupe"]},{"zahl":60,"wort":"Schuss","alternativen":[],"bilder":["am Schießstand auf einem Rummelplatz den Hauptgewinn erzielen","Zielscheibe"]},{"zahl":61,"wort":"Schutt","alternativen":[],"bilder":["Mohnblumen, die auf einer Schutthalde wachsen","ein Schrotthaufen bedeckt den Routenpunkt","Container mit Bauschutt"]},{"zahl":62,"wort":"Scheune","alternativen":[],"bilder":["Strohballen in einer Scheune, von denen du gerne ins weiche Stroh springen würdest"]},{"zahl":63,"wort":"Schaum","alternativen":[],"bilder":["Schaumbad","ein Glas Bier mit einer schönen weißen Schaumkrone (Achtung: 94 ist Bier)","große Seifenblasen, die du aus einem Eimer mit schaumiger Seifenlauge ziehst"]},{"zahl":64,"wort":"Schere","alternativen":[],"bilder":["große Gartenschere","bunte Kinderschere"]},{"zahl":65,"wort":"Schal","alternativen":["Schule","Schale","Scholle"],"bilder":["selbst gestrickter, bunter Schal","Schule: einer deiner Lehrer oder Mitschüler","Schale: Obstschale, Nussschale, Müslischale","Scholle: Eisscholle, Erdscholle, Fischfilet (Achtung: 86 ist Fisch)"]},{"zahl":66,"wort":"Schach","alternativen":[],"bilder":["Schachbrett","Schachfigur: Turm, Bauer oder Pferd","karierte Siegerflagge beim Autorennen","Routenpunkt schwarz-weiß kariert machen"]},{"zahl":67,"wort":"Scheck","alternativen":[],"bilder":["deine Scheckkarte","großer Gewinnscheck über eine Million Euro"]},{"zahl":68,"wort":"Schaf","alternativen":[],"bilder":["kleines Comicschaf, das vom Baum fällt","Schäfer mit seiner Herde","Schafwolle"]},{"zahl":69,"wort":"Schippe","alternativen":["Scheibe"],"bilder":["Schneeschippe","Scheibe: Brotscheibe, Glasscheibe, Wurstscheibe"]},{"zahl":70,"wort":"Kasse","alternativen":["Käse","Kuss"],"bilder":["alte mechanische Kasse","Käse: Käseplatte, Stinkkäse, Käsekuchen","Kuss: Der Kuss von Rodin oder Klimt"]},{"zahl":71,"wort":"Kette","alternativen":[],"bilder":["Halskette","Vorhängeschloss","Rasseln eines Gespenstes"]},{"zahl":72,"wort":"Kanne","alternativen":[],"bilder":["Lieblingskanne (Achtung: 78 ist Kaffee)","schwebende Kanne, aus der Milch fließt"]},{"zahl":73,"wort":"Kamm","alternativen":[],"bilder":["eigener Lieblingskamm","Erinnerung an eine Wanderung über einen Bergkamm"]},{"zahl":74,"wort":"Karre","alternativen":[],"bilder":["Schubkarre","dein Auto oder Lieblingsauto"]},{"zahl":75,"wort":"Keule","alternativen":[],"bilder":["Fred Feuerstein mit Keule","Baseballschläger","Kegel"]},{"zahl":76,"wort":"Koch","alternativen":[],"bilder":["Koch deines Lieblingsrestaurants","Kochmütze, Kochtopf oder Kochlöffel"]},{"zahl":77,"wort":"Kacke","alternativen":["Keks"],"bilder":["den Anblick von Hundehaufen auf dem Gehweg hast auch du sicher vor Augen","Keks: bunte Keksdose deines Haushalts mit deinen Lieblingskeksen"]},{"zahl":78,"wort":"Kaffee","alternativen":[],"bilder":["offene Kaffeepackung mit dem Duft frisch gemahlenen Kaffees","der Geschmack zerbissener Kaffeebohnen","Mokkatasse"]},{"zahl":79,"wort":"Kappe","alternativen":[],"bilder":["Basecap","Tick, Trick und Track Duck"]},{"zahl":80,"wort":"Fass","alternativen":["Vase"],"bilder":["Bierfass","Vase: Lieblingsvase"]},{"zahl":81,"wort":"Fett","alternativen":[],"bilder":["Regenpfütze, auf der Fett oder Öl schwimmt und in allen Regenbogenfarben schillert","Pommes frites","Margarinepackung","Routenpunkt ist mit Fett überzogen und glänzt"]},{"zahl":82,"wort":"Fahne","alternativen":[],"bilder":["Nationalflagge","Alkoholfahne","Linienrichter beim Fußball"]},{"zahl":83,"wort":"WM","alternativen":[],"bilder":["Gruppenfoto einer Fußballmannschaft","Flaggenwald der teilnehmenden Nationen"]},{"zahl":84,"wort":"Fähre","alternativen":["Fuhre"],"bilder":["großes Urlaubsschiff","Autofähre","einfache Flussfähre","Fuhre: hoch bepackter Heuwagen"]},{"zahl":85,"wort":"Falle","alternativen":[],"bilder":["Mausefalle","kanadischer Fallensteller mit Biberschwanzmütze"]},{"zahl":86,"wort":"Fisch","alternativen":["Wäsche"],"bilder":["Goldfisch im Glas","springende Forelle","Wäsche: Wäschekorb"]},{"zahl":87,"wort":"Waage","alternativen":[],"bilder":["Küchenwaage","Statue der Gerechtigkeit mit dem Symbol der Waage"]},{"zahl":88,"wort":"Waffe","alternativen":[],"bilder":["Pistole","durchlöcherte Schießscheibe vom Oktoberfest"]},{"zahl":89,"wort":"Wabe","alternativen":[],"bilder":["Bienenwaben","Honigbrot","Bienenwachskerze"]},{"zahl":90,"wort":"Bus","alternativen":[],"bilder":["Londoner Doppeldecker","Campingbus"]},{"zahl":91,"wort":"Bett","alternativen":[],"bilder":["dein Bett","Wasserbett"]},{"zahl":92,"wort":"Bahn","alternativen":["Buhne","Bühne","Bein","Biene"],"bilder":["Kinderholzeisenbahn, die im Kreis fährt","ICE","historische Dampflokomotive","Buhne: Küstenschutz am Meer","Bühne: Lieblingstheater, Lieblingsschauspieler","Bein: auf Stelzen gehen","Biene: Biene Maja (Achtung: 89 ist Wabe)"]},{"zahl":93,"wort":"Baum","alternativen":[],"bilder":["dein Lieblingsbaum","frisch gepflanzter Baum"]},{"zahl":94,"wort":"Bier","alternativen":["Bär"],"bilder":["Bierkasten","Bierflasche","frisch eingeschenktes Pils","Bär: Balou aus dem Dschungelbuch","Bär: Braunbär aus dem Zoo"]},{"zahl":95,"wort":"Ball","alternativen":[],"bilder":["Fußball, Volleyball, Golfball, was du willst","Ballkleid"]},{"zahl":96,"wort":"Buch","alternativen":[],"bilder":["das beeindruckendste Buch, das du je gelesen hast","der Eingang zu einer Bibliothek","ein aufgeschlagenes Kochbuch oder Lexikon"]},{"zahl":97,"wort":"Backe","alternativen":[],"bilder":["deine Backe brennt von einer Ohrfeige","Kuchen mit Geburtstagskerze (backe, backe Kuchen)","Gesicht einer Dame mit stark geschminkten Backen"]},{"zahl":98,"wort":"Bifi","alternativen":[],"bilder":["eine Schnur, an der ganz viele Würstchen hängen","eine Verpackung mit Bifi-Würstchen"]},{"zahl":99,"wort":"Papa","alternativen":[],"bilder":["Papa ist Papa"]}]}</script>
 <!-- DATA:END -->
+
+<!-- STACK:START -->
+<script id="stack-data" type="application/json">{"quelle":"Juan Tamariz, Mnemonica","hinweis":"Reihenfolge von Position 1 (oben im Stapel) bis 52. Kuerzel: A 2 3 4 5 6 7 8 9 10 J Q K, Farben C = Kreuz, D = Karo, H = Herz, S = Pik.","stapel":["4C","2H","7D","3C","4H","6D","AS","5H","9S","2S","QH","3D","QC","8H","6S","5S","9H","KC","2D","JH","3S","8S","6H","10C","5D","KD","2C","3H","8D","5C","KS","JD","8C","10S","KH","JC","7S","10H","AD","4S","7H","4D","AC","9C","JS","QD","7C","QS","10D","6C","AH","9D"]}</script>
+<!-- STACK:END -->
 
 <script>
 "use strict";
@@ -545,8 +624,16 @@ const DEFAULTS = {
   cards: {},              // "12:w2n" -> {box, due, seen, fast}
   custom: {},             // "12" -> {wort, notiz}
   unlocked: [0],          // unlocked blocks of ten
-  settings: {newPerDay: 5, fastMs: 3000, theme: "system", reiheBlocks: null, w2nChain: 1},
+  settings: {newPerDay: 5, fastMs: 3000, theme: "system", reiheBlocks: null, w2nChain: 1, stack: false},
   stats: {streak: 0, lastDay: "", todayCount: 0, todayDay: "", blitzBest: 0, reiheBest: 0},
+  /* Optional second deck, see the stapel section. Own boxes, own images, so the
+     number cards above stay exactly as they were. */
+  stack: {
+    bilder: {},           // "10S" -> {bild}      your image for that card
+    links: {},            // "34"  -> string      how the number image and the card are tied
+    cards: {},            // "34:p2c" -> {box, due, seen, fast}
+    unlocked: [0],        // blocks of thirteen
+  },
 };
 const clone = value => JSON.parse(JSON.stringify(value));
 let state = load();
@@ -558,6 +645,7 @@ function load(){
     return Object.assign(clone(DEFAULTS), stored, {
       settings: Object.assign({}, DEFAULTS.settings, stored.settings || {}),
       stats: Object.assign({}, DEFAULTS.stats, stored.stats || {}),
+      stack: Object.assign(clone(DEFAULTS.stack), stored.stack || {}),
     });
   }catch(e){ return clone(DEFAULTS); }
 }
@@ -764,6 +852,9 @@ function renderHome(){
   $("#stat-mastered").textContent = ENTRIES.filter(e => levelOf(e.zahl) >= 4).length;
   $("#blitz-best").textContent = state.stats.blitzBest ? "Best " + state.stats.blitzBest : "";
   $("#w2n-chain").textContent = chainSize() > 1 ? chainSize() + "er" : "";
+  $("#menu-stack").hidden = !state.settings.stack || !STACK.length;
+  $("#stack-badge").textContent = state.settings.stack && STACK.length
+    ? `${stackMastered()}/${STACK.length}` : "";
 
   const grid = $("#grid");
   grid.textContent = "";
@@ -893,22 +984,29 @@ function openCard(number){
 const drill = {queue: [], index: 0, mode: "", startedAt: 0, correct: 0, total: 0, answered: false};
 
 function startSession(mode){
+  const stackMode = mode.startsWith("s-");
+  drillHome = stackMode ? "stack" : "home";
   drill.mode = mode;
   drill.index = 0;
   drill.correct = 0;
   drill.total = 0;
-  const nothingPending = mode === "heute"
-    && !dueCards().length
-    && !newNumbers(state.settings.newPerDay).length;
+  const nothingPending = (mode === "heute"
+      && !dueCards().length
+      && !newNumbers(state.settings.newPerDay).length)
+    || (mode === "s-heute" && !stackDue().length && !stackFresh().length);
   drill.queue = buildQueue(mode);
   if(!drill.queue.length){
-    toast(mode === "intro" ? "Alle freigeschalteten Zahlen sind schon eingeführt" : "Nichts zu üben, schalte einen Block frei");
+    toast(mode === "intro" || mode === "s-intro"
+      ? "Hier ist alles schon eingeführt"
+      : "Nichts zu üben, schalte einen Block frei");
     return;
   }
   const size = chainSize();
   $("#drill-title").textContent = nothingPending ? "Auffrischen" : ({
     heute: "Heute üben", intro: "Kennenlernen", n2w: "Zahl zu Wort",
-    w2n: size > 1 ? `Wort zu Zahl, ${size}er-Kette` : "Wort zu Zahl"
+    w2n: size > 1 ? `Wort zu Zahl, ${size}er-Kette` : "Wort zu Zahl",
+    "s-heute": "Stapel üben", "s-intro": "Stapel kennenlernen",
+    "s-p2c": "Position zu Karte", "s-c2p": "Karte zu Position", "s-next": "Nachbarn"
   })[mode] || mode;
   show("drill");
   if(mode === "w2n" && (state.settings.w2nChain || 1) > 1 && size === 1){
@@ -926,6 +1024,7 @@ function chainSize(){
   return unlockedNumbers().filter(n => n >= 10).length >= wanted ? wanted : 1;
 }
 function buildQueue(mode){
+  if(mode.startsWith("s-")) return stackQueue(mode);
   const numbers = unlockedNumbers();
   if(mode === "intro"){
     const fresh = numbers.filter(n => !getCard(n, "n2w"));
@@ -981,7 +1080,8 @@ function nextTask(){
   $("#drill-hint").textContent = "";
   drill.answered = false;
   drill.startedAt = performance.now();
-  if(task.kind === "intro") renderIntro(task);
+  if(task.stack) renderStackTask(task);
+  else if(task.kind === "intro") renderIntro(task);
   else if(task.numbers) renderWordChain(task);
   else if(task.direction === "w2n") renderWordToNumber(task);
   else renderNumberToWord(task);
@@ -1013,7 +1113,15 @@ function finishSession(){
   done.appendChild(again);
   prompt.appendChild(done);
 }
+/* Wohin ein beendeter Drill zurückführt. Der Stapel ist ein eigener Bereich,
+   aus ihm heraus will niemand auf der Zahlen-Übersicht landen. */
+let drillHome = "home";
 function goHome(){
+  if(drillHome === "stack"){
+    renderStack();
+    show("stack");
+    return;
+  }
   renderHome();
   show("home");
 }
@@ -1261,7 +1369,9 @@ function keypad({onDigit, onClear, actionLabel, onAction}){
 function settle(task, correct, ms){
   drill.total++;
   if(correct) drill.correct++;
-  const result = grade(task.number, task.direction, correct, ms);
+  const result = task.stack
+    ? gradeStack(task.position, task.direction, correct, ms)
+    : grade(task.number, task.direction, correct, ms);
   const verdict = $("#drill-verdict");
   verdict.className = "verdict " + (correct ? "right" : "wrong");
   verdict.textContent = correct ? (result.fast ? "Sitzt" : "Richtig, aber zögerlich") : "Nochmal";
@@ -1303,6 +1413,7 @@ function settleChain(task, numbers, results, ms){
 
 /* =============================================================== blitz */
 function startBlitz(){
+  drillHome = "home";
   show("drill");
   $("#drill-title").textContent = "Blitz";
   const pool = unlockedNumbers();
@@ -1409,6 +1520,7 @@ function startBlitz(){
 
 /* ============================================================== reihe */
 function startReihe(){
+  drillHome = "home";
   show("drill");
   $("#drill-title").textContent = "Zahlenreihe";
   $("#drill-progress").style.width = "0";
@@ -1593,6 +1705,498 @@ function startReihe(){
   }
 }
 
+/* ============================================================== stapel */
+/* Optionaler Zusatz: die Reihenfolge eines Gedächtnis-Kartenstapels. Die
+   Positionen 1 bis 52 hängen an den Zahlenbildern, die hier ohnehin gedrillt
+   werden, deshalb braucht es keine eigene Route. Alles liegt in state.stack,
+   die Zahlenkarten bleiben unberührt. */
+const STACK = (() => {
+  try{ return JSON.parse($("#stack-data").textContent).stapel || []; }
+  catch(e){ return []; }
+})();
+const SUITS = {
+  C: {zeichen: "♣", name: "Kreuz", rot: false},
+  D: {zeichen: "♦", name: "Karo", rot: true},
+  H: {zeichen: "♥", name: "Herz", rot: true},
+  S: {zeichen: "♠", name: "Pik", rot: false},
+};
+const STACK_BLOCK = 13;
+/* "next" wird geübt und gewertet, zählt aber nicht in die Farbe des Rasters:
+   wer beide Richtungen kann, kennt die Nachbarn ohnehin. */
+const STACK_DIRECTIONS = ["p2c", "c2p"];
+
+function cardAt(position){ return STACK[position - 1] || null; }
+function suitOf(code){ return SUITS[code.slice(-1)]; }
+function valueOf(code){ return code.slice(0, -1); }
+function karteText(code){ return valueOf(code) + suitOf(code).zeichen; }
+function karteName(code){ return suitOf(code).name + " " + valueOf(code); }
+function renderKarte(code){
+  const suit = suitOf(code);
+  const span = el("span", "karte" + (suit.rot ? " rot" : ""));
+  span.appendChild(el("span", "v", valueOf(code)));
+  span.appendChild(el("span", "f", suit.zeichen));
+  return span;
+}
+function kartenbild(code){
+  const own = state.stack.bilder[code];
+  return (own && own.bild) ? own.bild : "";
+}
+function stackBlockOf(position){ return Math.floor((position - 1) / STACK_BLOCK); }
+function stackBlockLabel(block){ return `${block * STACK_BLOCK + 1}–${Math.min(STACK.length, (block + 1) * STACK_BLOCK)}`; }
+function stackPositions(){
+  const list = [];
+  for(const block of state.stack.unlocked){
+    for(let p = block * STACK_BLOCK + 1; p <= (block + 1) * STACK_BLOCK; p++){
+      if(p <= STACK.length) list.push(p);
+    }
+  }
+  return list.sort((a, b) => a - b);
+}
+
+/* --- Leitner, gleiche Regeln wie bei den Zahlen ------------------- */
+function stackCardId(position, direction){ return `${position}:${direction}`; }
+function getStackCard(position, direction){
+  return state.stack.cards[stackCardId(position, direction)] || null;
+}
+function stackLevel(position){
+  const boxes = STACK_DIRECTIONS.map(d => { const c = getStackCard(position, d); return c ? c.box : 0; });
+  return Math.min(...boxes);
+}
+function gradeStack(position, direction, correct, ms){
+  const id = stackCardId(position, direction);
+  const card = state.stack.cards[id] || {box: 1, due: today(), seen: 0, fast: 0};
+  const fast = ms <= state.settings.fastMs;
+  card.seen++;
+  if(correct){
+    if(fast){ card.box = Math.min(5, card.box + 1); card.fast++; }
+  }else{
+    card.box = 1;
+  }
+  card.due = addDays(INTERVALS[card.box]);
+  card.last = ms;
+  state.stack.cards[id] = card;
+  bumpToday();
+  save();
+  return {correct, fast, box: card.box};
+}
+function seedStackCard(position, box){
+  for(const direction of STACK_DIRECTIONS){
+    const id = stackCardId(position, direction);
+    if(!state.stack.cards[id]) state.stack.cards[id] = {box, due: addDays(INTERVALS[box]), seen: 0, fast: 0};
+  }
+  save();
+}
+function stackDue(){
+  const list = [];
+  for(const position of stackPositions()){
+    for(const direction of STACK_DIRECTIONS){
+      const card = getStackCard(position, direction);
+      if(isDue(card)) list.push({position, direction});
+    }
+  }
+  return list;
+}
+function stackFresh(){
+  return stackPositions().filter(p => !getStackCard(p, "p2c") && !getStackCard(p, "c2p"));
+}
+function stackMastered(){
+  return STACK.map((code, index) => index + 1).filter(p => stackLevel(p) >= 4).length;
+}
+
+function stackQueue(mode){
+  const positions = stackPositions();
+  if(mode === "s-intro"){
+    return stackFresh().slice(0, STACK_BLOCK).map(p => ({stack: true, kind: "intro", position: p}));
+  }
+  if(mode !== "s-heute"){
+    const direction = mode.slice(2);
+    // Nachbarn braucht die Folgeposition, und die muss auch offen sein
+    const pool = direction === "next"
+      ? positions.filter(p => p < STACK.length && positions.includes(p + 1))
+      : positions;
+    return shuffle(pool).slice(0, 20).map(p => ({stack: true, kind: "quiz", position: p, direction}));
+  }
+  const tasks = [];
+  for(const position of stackFresh().slice(0, state.settings.newPerDay)){
+    tasks.push({stack: true, kind: "intro", position});
+    tasks.push({stack: true, kind: "quiz", position, direction: "p2c"});
+  }
+  const due = shuffle(stackDue()).map(c => ({stack: true, kind: "quiz", position: c.position, direction: c.direction}));
+  const queue = tasks.concat(due).slice(0, 45);
+  if(queue.length) return queue;
+  // nichts fällig, nichts neu: die schwächsten Karten auffrischen
+  const cards = [];
+  for(const position of positions){
+    for(const direction of STACK_DIRECTIONS){
+      const card = getStackCard(position, direction);
+      cards.push({position, direction, box: card ? card.box : 0});
+    }
+  }
+  return shuffle(cards)
+    .sort((a, b) => a.box - b.box)
+    .slice(0, 20)
+    .map(c => ({stack: true, kind: "quiz", position: c.position, direction: c.direction}));
+}
+
+/* --- die vier Aufgabenarten -------------------------------------- */
+function renderStackTask(task){
+  if(task.kind === "intro") return renderStackIntro(task);
+  if(task.direction === "c2p") return renderCardToPosition(task);
+  if(task.direction === "next") return renderNextCard(task);
+  return renderPositionToCard(task);
+}
+function stackHead(position, {karte = true, zahl = true} = {}){
+  const row = el("div", "kartenzeile");
+  if(zahl){
+    const num = el("div", "bignum num", label(position));
+    num.style.margin = "0";
+    row.appendChild(num);
+  }
+  if(karte){
+    const card = renderKarte(cardAt(position));
+    card.classList.add("bigkarte");
+    row.appendChild(card);
+  }
+  return row;
+}
+function renderStackIntro(task){
+  const position = task.position;
+  const code = cardAt(position);
+  const prompt = $("#drill-prompt");
+  prompt.textContent = "";
+  prompt.appendChild(el("div", "ask", "Neu"));
+  prompt.appendChild(stackHead(position));
+  const peg = renderWord(wordFor(position));
+  peg.className = "word";
+  peg.style.fontSize = "26px";
+  prompt.appendChild(peg);
+  const bild = kartenbild(code);
+  prompt.appendChild(el("div", "kartenbild", bild
+    ? `${karteText(code)} ist bei dir: ${bild}`
+    : `Für ${karteText(code)} hast du noch kein Bild.`));
+  const link = state.stack.links[position];
+  if(link) prompt.appendChild(el("p", "note", link));
+
+  const answer = $("#drill-answer");
+  answer.textContent = "";
+  const edit = el("button", "btn quiet", "Bild und Verknüpfung");
+  edit.addEventListener("click", () => openStackPosition(position));
+  answer.appendChild(edit);
+  const buttons = el("div", "selfcheck");
+  buttons.style.marginTop = "8px";
+  const known = el("button", "btn quiet", "Kenne ich schon");
+  known.addEventListener("click", () => { seedStackCard(position, 3); advance(); });
+  const learn = el("button", "btn", "Merke ich mir");
+  learn.addEventListener("click", () => { seedStackCard(position, 1); advance(); });
+  buttons.appendChild(known);
+  buttons.appendChild(learn);
+  answer.appendChild(buttons);
+  $("#drill-hint").textContent = `Verknüpfe ${wordFor(position)} mit ${karteText(code)} zu einer Szene, die wehtut oder lacht.`;
+}
+function kartenOptionen(position, count){
+  const pool = STACK.map((code, index) => index + 1).filter(p => p !== position);
+  const near = pool.filter(p => Math.abs(p - position) <= 10);
+  const picked = shuffle(near).slice(0, count);
+  const rest = shuffle(pool.filter(p => !picked.includes(p)));
+  while(picked.length < count && rest.length) picked.push(rest.pop());
+  return picked.map(cardAt);
+}
+function kartenGitter(richtig, options, onPick){
+  const grid = el("div", "options");
+  for(const code of shuffle(options)){
+    const button = el("button", "opt");
+    button.appendChild(renderKarte(code));
+    button.addEventListener("click", () => {
+      if(drill.answered) return;
+      drill.answered = true;
+      const correct = code === richtig;
+      button.classList.add(correct ? "right" : "wrong");
+      if(!correct){
+        [...grid.children].forEach(child => {
+          if(child.textContent === karteText(richtig)) child.classList.add("right");
+        });
+      }
+      onPick(correct);
+    });
+    grid.appendChild(button);
+  }
+  return grid;
+}
+function renderPositionToCard(task){
+  const position = task.position;
+  const code = cardAt(position);
+  const card = getStackCard(position, "p2c");
+  const box = card ? card.box : 1;
+  const prompt = $("#drill-prompt");
+  prompt.textContent = "";
+  prompt.appendChild(el("div", "ask", "Welche Karte liegt hier?"));
+  prompt.appendChild(el("div", "bignum num", label(position)));
+  const peg = renderWord(wordFor(position));
+  peg.className = "word";
+  peg.style.fontSize = "22px";
+  peg.style.opacity = ".7";
+  prompt.appendChild(peg);
+  const answer = $("#drill-answer");
+  answer.textContent = "";
+
+  if(box <= 2){
+    answer.appendChild(kartenGitter(code, kartenOptionen(position, 5).concat([code]),
+      correct => settle(task, correct, performance.now() - drill.startedAt)));
+    $("#drill-hint").textContent = "Erst das Zahlenbild sehen, dann die Karte suchen.";
+  }else{
+    const reveal = el("button", "btn", "Aufdecken");
+    reveal.addEventListener("click", () => {
+      const ms = performance.now() - drill.startedAt;
+      const shown = renderKarte(code);
+      shown.classList.add("bigkarte", "reveal");
+      prompt.appendChild(shown);
+      const bild = kartenbild(code);
+      if(bild) prompt.appendChild(el("div", "kartenbild", bild));
+      answer.textContent = "";
+      const check = el("div", "selfcheck");
+      const no = el("button", "btn quiet", "Wusste ich nicht");
+      no.addEventListener("click", () => settle(task, false, ms));
+      const yes = el("button", "btn", "Hatte ich");
+      yes.addEventListener("click", () => settle(task, true, ms));
+      check.appendChild(no);
+      check.appendChild(yes);
+      answer.appendChild(check);
+    });
+    answer.appendChild(reveal);
+    $("#drill-hint").textContent = "Erst die Karte vor Augen haben, dann aufdecken.";
+  }
+}
+function renderNextCard(task){
+  const position = task.position;
+  const code = cardAt(position);
+  const naechste = cardAt(position + 1);
+  const prompt = $("#drill-prompt");
+  prompt.textContent = "";
+  prompt.appendChild(el("div", "ask", "Welche Karte kommt danach?"));
+  prompt.appendChild(stackHead(position, {zahl: false}));
+  const answer = $("#drill-answer");
+  answer.textContent = "";
+  answer.appendChild(kartenGitter(naechste, kartenOptionen(position + 1, 5).concat([naechste]),
+    correct => settle(task, correct, performance.now() - drill.startedAt)));
+  $("#drill-hint").textContent = "Über die Position gehen, wenn es nicht direkt kommt.";
+}
+function renderCardToPosition(task){
+  const position = task.position;
+  const code = cardAt(position);
+  const prompt = $("#drill-prompt");
+  prompt.textContent = "";
+  prompt.appendChild(el("div", "ask", "Auf welcher Position?"));
+  prompt.appendChild(stackHead(position, {zahl: false}));
+  const bild = kartenbild(code);
+  if(bild) prompt.appendChild(el("div", "kartenbild", bild));
+
+  const answer = $("#drill-answer");
+  answer.textContent = "";
+  let typed = "";
+  const display = el("div", "entry");
+  const paint = () => {
+    display.textContent = "";
+    for(const ch of typed.padEnd(2, "_")) display.appendChild(el("span", ch === "_" ? "ph" : "", ch));
+  };
+  paint();
+  answer.appendChild(display);
+  answer.appendChild(keypad({
+    onDigit: digit => {
+      if(drill.answered || typed.length >= 2) return;
+      typed += digit;
+      paint();
+      // gleiche Regel wie bei den Zahlen: eine passende Einzelziffer steht für sich
+      if(typed.length === 2 || Number(typed) === position) submit();
+    },
+    onClear: () => { if(!drill.answered){ typed = ""; paint(); } },
+    actionLabel: "Prüfen",
+    onAction: submit,
+  }));
+  $("#drill-hint").textContent = "Sobald die Position stimmt, geht es von selbst weiter. Sonst mit Prüfen bestätigen.";
+
+  function submit(){
+    if(drill.answered || !typed.length) return;
+    drill.answered = true;
+    const ms = performance.now() - drill.startedAt;
+    const correct = Number(typed) === position;
+    display.style.color = correct ? "var(--sage)" : "var(--rust)";
+    if(!correct){
+      const right = el("div", "small muted");
+      right.style.textAlign = "center";
+      right.textContent = `richtig: ${position}, ${wordFor(position)}`;
+      answer.insertBefore(right, answer.children[1]);
+    }
+    settle(task, correct, ms);
+  }
+}
+
+/* --- Übersicht, Raster und Kartenbilder --------------------------- */
+function renderStack(){
+  const due = stackDue().length;
+  const fresh = stackFresh().length;
+  const total = due + fresh;
+  const count = $("#stack-due");
+  count.textContent = total;
+  count.classList.toggle("done", total === 0);
+  $("#stack-due-label").textContent = total === 0
+    ? "Alles wiederholt. Üben geht trotzdem."
+    : (due + " zur Wiederholung" + (fresh ? ", " + fresh + " neu" : ""));
+  $("#stack-practice").textContent = total === 0 ? "Trotzdem üben" : "Üben";
+  $("#stack-mastered").textContent = stackMastered();
+  $("#stack-open").textContent = stackPositions().length;
+
+  const grid = $("#stack-grid");
+  grid.textContent = "";
+  const dueSet = new Set(stackDue().map(c => c.position));
+  const offen = new Set(stackPositions());
+  for(let p = 1; p <= STACK.length; p++){
+    const cell = el("button", "cell", String(p));
+    if(!offen.has(p)) cell.classList.add("locked");
+    cell.dataset.box = offen.has(p) ? stackLevel(p) : 0;
+    if(dueSet.has(p)) cell.classList.add("due");
+    cell.addEventListener("click", () => openStackPosition(p));
+    grid.appendChild(cell);
+  }
+
+  const chips = $("#stack-blocks");
+  chips.textContent = "";
+  const blocks = Math.ceil(STACK.length / STACK_BLOCK);
+  for(let block = 0; block < blocks; block++){
+    const chip = el("button", "chip" + (state.stack.unlocked.includes(block) ? " on" : ""), stackBlockLabel(block));
+    chip.addEventListener("click", () => {
+      if(state.stack.unlocked.includes(block)){
+        if(state.stack.unlocked.length === 1){ toast("Mindestens ein Block muss offen bleiben"); return; }
+        state.stack.unlocked = state.stack.unlocked.filter(b => b !== block);
+      }else{
+        state.stack.unlocked.push(block);
+        state.stack.unlocked.sort((a, b) => a - b);
+      }
+      save();
+      renderStack();
+    });
+    chips.appendChild(chip);
+  }
+}
+function openStackPosition(position){
+  const code = cardAt(position);
+  openSheet(sheet => {
+    const head = el("div", "kartenzeile");
+    head.style.justifyContent = "flex-start";
+    const num = el("div", "num", label(position));
+    num.style.fontSize = "34px";
+    head.appendChild(num);
+    const w = renderWord(wordFor(position));
+    w.style.fontSize = "26px";
+    head.appendChild(w);
+    const card = renderKarte(code);
+    card.style.fontSize = "34px";
+    head.appendChild(card);
+    sheet.appendChild(head);
+
+    const bild = kartenbild(code);
+    sheet.appendChild(el("p", "note", bild
+      ? `Dein Bild für ${karteText(code)}: ${bild}`
+      : `Für ${karteText(code)} steht noch kein Bild. Das gehört in die Kartenliste.`));
+
+    const field = el("div", "field");
+    field.appendChild(el("label", null, "Verknüpfung von Zahlbild und Karte"));
+    const input = el("input");
+    input.type = "text";
+    input.placeholder = `${wordFor(position)} trifft ${karteText(code)}`;
+    input.value = state.stack.links[position] || "";
+    field.appendChild(input);
+    sheet.appendChild(field);
+
+    const card1 = getStackCard(position, "p2c");
+    sheet.appendChild(el("p", "note", card1
+      ? `Fach ${stackLevel(position)} von 5, nächste Wiederholung ${card1.due === today() ? "heute" : card1.due}.`
+      : "Noch nicht geübt."));
+
+    const buttons = el("div", "rowbtns");
+    const saveBtn = el("button", "btn", "Sichern");
+    saveBtn.addEventListener("click", () => {
+      const value = input.value.trim();
+      if(value) state.stack.links[position] = value;
+      else delete state.stack.links[position];
+      save();
+      closeSheet();
+      toast("Gesichert");
+    });
+    const kartenBtn = el("button", "btn quiet", "Kartenbild");
+    kartenBtn.addEventListener("click", () => openKarte(code));
+    buttons.appendChild(saveBtn);
+    buttons.appendChild(kartenBtn);
+    sheet.appendChild(buttons);
+  });
+}
+function openKarte(code){
+  openSheet(sheet => {
+    const head = el("div", "kartenzeile");
+    head.style.justifyContent = "flex-start";
+    const card = renderKarte(code);
+    card.style.fontSize = "40px";
+    head.appendChild(card);
+    head.appendChild(el("div", "small muted", karteName(code)));
+    sheet.appendChild(head);
+    sheet.appendChild(el("p", "note", `Liegt im Stapel auf Position ${STACK.indexOf(code) + 1}.`));
+
+    const field = el("div", "field");
+    field.appendChild(el("label", null, "Dein Bild für diese Karte"));
+    const input = el("input");
+    input.type = "text";
+    input.autocapitalize = "sentences";
+    input.placeholder = "Was siehst du?";
+    input.value = kartenbild(code);
+    field.appendChild(input);
+    sheet.appendChild(field);
+    sheet.appendChild(el("p", "note", "Das Bild gehört der Karte, nicht der Position. Es bleibt dasselbe, egal welchen Stapel du lernst."));
+
+    const buttons = el("div", "rowbtns");
+    const saveBtn = el("button", "btn", "Sichern");
+    saveBtn.addEventListener("click", () => {
+      const value = input.value.trim();
+      if(value) state.stack.bilder[code] = {bild: value};
+      else delete state.stack.bilder[code];
+      save();
+      closeSheet();
+      if($("#view-karten").classList.contains("active")) renderKartenListe();
+      toast("Gesichert");
+    });
+    const close = el("button", "btn ghost", "Schließen");
+    close.addEventListener("click", closeSheet);
+    buttons.appendChild(saveBtn);
+    buttons.appendChild(close);
+    sheet.appendChild(buttons);
+  });
+}
+function renderKartenListe(){
+  const table = $("#karten-table");
+  table.textContent = "";
+  const order = ["S", "H", "D", "C"];
+  const values = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+  const codes = [];
+  for(const suit of order){
+    for(const value of values){
+      if(STACK.includes(value + suit)) codes.push(value + suit);
+    }
+  }
+  for(const code of codes){
+    const row = table.insertRow();
+    const cardCell = row.insertCell();
+    cardCell.className = "n";
+    cardCell.appendChild(renderKarte(code));
+    const imageCell = row.insertCell();
+    imageCell.className = "w";
+    const bild = kartenbild(code);
+    imageCell.textContent = bild || "noch kein Bild";
+    if(!bild) imageCell.style.color = "var(--paper-dim)";
+    const positionCell = row.insertCell();
+    positionCell.className = "a";
+    positionCell.textContent = "Pos " + (STACK.indexOf(code) + 1);
+    row.addEventListener("click", () => openKarte(code));
+  }
+}
+
 /* ========================================================== werkstatt */
 function renderWerkstatt(){
   const table = $("#werk-table");
@@ -1735,6 +2339,19 @@ function renderSettings(){
     });
     chainWrap.appendChild(chip);
   }
+  const stackWrap = $("#set-stack");
+  stackWrap.textContent = "";
+  for(const [value, caption] of [[false, "aus"], [true, "an"]]){
+    const chip = el("button", "chip" + (!!state.settings.stack === value ? " on" : ""), caption);
+    chip.style.fontFamily = "var(--sans)";
+    chip.addEventListener("click", () => {
+      state.settings.stack = value;
+      save();
+      renderSettings();
+      renderHome();
+    });
+    stackWrap.appendChild(chip);
+  }
   const wrap = $("#set-blocks");
   wrap.textContent = "";
   for(let block = 0; block < 10; block++){
@@ -1775,6 +2392,7 @@ function importState(file){
       state = Object.assign(clone(DEFAULTS), incoming, {
         settings: Object.assign({}, DEFAULTS.settings, incoming.settings || {}),
         stats: Object.assign({}, DEFAULTS.stats, incoming.stats || {}),
+        stack: Object.assign(clone(DEFAULTS.stack), incoming.stack || {}),
       });
       save();
       applyTheme();
@@ -1798,12 +2416,23 @@ $("#werk-drill").addEventListener("click", startZiffernDrill);
 document.querySelectorAll(".menu button").forEach(button => {
   button.addEventListener("click", () => {
     const mode = button.dataset.mode;
+    if(!mode) return;                      // Stapel-Menü hat eigene Verdrahtung
     if(mode === "werkstatt"){ renderWerkstatt(); show("werkstatt"); }
     else if(mode === "liste"){ renderListe(); show("liste"); }
     else if(mode === "blitz") startBlitz();
     else if(mode === "reihe") startReihe();
+    else if(mode === "stack"){ renderStack(); show("stack"); }
     else startSession(mode);
   });
+});
+
+/* Stapel */
+$("#stack-back").addEventListener("click", () => { renderHome(); show("home"); });
+$("#karten-back").addEventListener("click", () => { renderStack(); show("stack"); });
+$("#btn-karten").addEventListener("click", () => { renderKartenListe(); show("karten"); });
+$("#stack-practice").addEventListener("click", () => startSession("s-heute"));
+document.querySelectorAll("[data-stackmode]").forEach(button => {
+  button.addEventListener("click", () => startSession(button.dataset.stackmode));
 });
 
 $("#btn-unlock").addEventListener("click", () => {
@@ -1856,7 +2485,7 @@ $("#import-file").addEventListener("change", event => {
 $("#btn-reset").addEventListener("click", () => {
   openSheet(sheet => {
     sheet.appendChild(el("p", null, "Lernstand wirklich zurücksetzen?"));
-    sheet.appendChild(el("p", "note", "Eigene Merkwörter, Notizen und alle Fächer werden gelöscht. Das lässt sich nicht rückgängig machen."));
+    sheet.appendChild(el("p", "note", "Eigene Merkwörter, Notizen, alle Fächer und der Kartenstapel mit deinen Kartenbildern werden gelöscht. Das lässt sich nicht rückgängig machen."));
     const buttons = el("div", "rowbtns");
     const yes = el("button", "btn danger", "Löschen");
     yes.addEventListener("click", () => {

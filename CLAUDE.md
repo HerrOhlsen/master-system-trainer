@@ -12,7 +12,8 @@ Geviert. Code-Kommentare auf Englisch, alles andere auf Deutsch.
 
 ## Die eine Regel, die alles zusammenhält
 
-`data/master-system.json` ist die einzige Datenquelle. Nach jeder inhaltlichen
+`data/master-system.json` ist die einzige Datenquelle für die Zahlen,
+`data/mnemonica.json` die für den Kartenstapel. Nach jeder inhaltlichen
 Änderung:
 
 ```
@@ -31,6 +32,9 @@ Der Encoder existiert zweimal: `encode()` in `tools/mastersystem.py` und
 `segment()` in `index.html`. Beide müssen sich gleich verhalten. Wer einen
 ändert, ändert den anderen mit.
 
+`tools/stack.py` prüft den Kartenstapel: 52 Positionen, jede Karte genau einmal.
+`inject_data.py` schreibt beide Datenblöcke und bricht bei jedem Problem ab.
+
 ## Was den Nutzern gehört
 
 Der Lernfortschritt liegt in `localStorage` unter `master-system-v1`, pro Gerät,
@@ -41,8 +45,9 @@ ohne Server und ohne Backup. Deshalb:
   `DEFAULTS` ergänzt, so überleben alte Stände ein Update.
 - Vor Änderungen am Speicher prüfen, ob Export und Import weiter zusammenpassen.
 
-Das gilt auch für eigene Merkwörter und Bildnotizen in `state.custom`. Die sind
-handgeschrieben und nirgends sonst vorhanden.
+Das gilt auch für eigene Merkwörter und Bildnotizen in `state.custom` sowie für
+die Kartenbilder und Verknüpfungen in `state.stack`. Die sind handgeschrieben
+und nirgends sonst vorhanden.
 
 ## Testen
 
@@ -54,7 +59,8 @@ python -m http.server 8765
 
 Danach `http://localhost:8765/` öffnen und die Modi durchgehen: Kennenlernen,
 beide Abfragerichtungen, Blitz, Zahlenreihe, Werkstatt, Kartenansicht,
-Einstellungen. In hellem **und** dunklem Modus prüfen, im Stylesheet darf kein
+Einstellungen. Der Kartenstapel liegt hinter dem Schalter in den Einstellungen
+und hat eigene Modi (Kennenlernen, beide Richtungen, Nachbarn, Kartenbilder). In hellem **und** dunklem Modus prüfen, im Stylesheet darf kein
 fester Farbwert stehen, alle Farben kommen aus den Theme-Tokens.
 
 Der Service Worker liefert aus dem Cache und aktualisiert im Hintergrund. Nach
