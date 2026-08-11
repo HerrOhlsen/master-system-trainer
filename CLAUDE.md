@@ -62,7 +62,9 @@ python -m http.server 8765
 Danach `http://localhost:8765/` öffnen und die Modi durchgehen: Kennenlernen,
 beide Abfragerichtungen, Blitz, Zahlenreihe, Werkstatt, Kartenansicht,
 Einstellungen. Der Kartenstapel liegt hinter dem Schalter in den Einstellungen
-und hat eigene Modi (Kennenlernen, beide Richtungen, Nachbarn, Kartenbilder). In hellem **und** dunklem Modus prüfen, im Stylesheet darf kein
+und hat zwei Stufen: erst die Kartenbilder (drei Modi, farbweise), dann die
+Reihenfolge (vier Modi, Blöcke zu 13). Stufe 2 fragt nach, wenn die Bilder eines
+Blocks noch nicht sitzen. In hellem **und** dunklem Modus prüfen, im Stylesheet darf kein
 fester Farbwert stehen, alle Farben kommen aus den Theme-Tokens.
 
 Der Service Worker liefert aus dem Cache und aktualisiert im Hintergrund. Nach

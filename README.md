@@ -100,8 +100,19 @@ darauf liegt Pik-Zehn, fertig ist der Anker. Das gibt wahlfreien Zugriff in
 beide Richtungen, was eine Route nicht kann, denn dort müsste man immer von
 vorn durchlaufen.
 
-Vier Modi: Kennenlernen, Position zu Karte, Karte zu Position, Nachbarn.
-Freigeschaltet wird in Blöcken zu 13.
+Der Bereich läuft in zwei Stufen, weil beides gleichzeitig nicht geht.
+
+**Stufe 1, die Kartenbilder.** Jede Karte bekommt ihr eigenes Bild, unabhängig
+davon, wo sie liegt. Drei Modi: Bilder kennenlernen, Karte zu Wort, Wort zu
+Karte. Gelernt wird farbweise, also 13 Karten am Stück.
+
+**Stufe 2, die Reihenfolge.** Vier Modi: Reihenfolge kennenlernen, Position zu
+Karte, Karte zu Position, Nachbarn. Freigeschaltet wird in Blöcken zu 13, und
+ein Block fragt nach, solange die Bilder der dreizehn Karten darin nicht sitzen:
+eine Zahl an eine Karte zu hängen, die man selbst noch suchen muss, bringt
+nichts. Verboten wird es nicht, „Trotzdem öffnen" steht daneben.
+
+„Heute üben" mischt beide Stufen und nimmt die Bilder zuerst.
 
 Die 52 Kartenwörter stehen in `data/kartensystem.json` und folgen derselben
 Konsonantenregel: der erste Konsonant trägt die Farbe (z Kreuz, k Karo, p Pik,

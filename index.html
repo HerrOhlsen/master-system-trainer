@@ -407,10 +407,28 @@ input{font:inherit}
       <div class="small muted" id="stack-due-label">Karten fällig</div>
       <button class="btn" id="stack-practice">Üben</button>
       <div class="streak">
-        <div><b class="num" id="stack-mastered">0</b>von 52 sitzen</div>
-        <div><b class="num" id="stack-open">0</b>Positionen offen</div>
+        <div><b class="num" id="stack-bilder">0</b>von 52 Bildern</div>
+        <div><b class="num" id="stack-mastered">0</b>Positionen sitzen</div>
       </div>
     </div>
+
+    <div class="section-title" style="margin-top:26px">Stufe 1: die Kartenbilder</div>
+    <p class="note" style="margin-top:0">
+      Jede Karte bekommt ihr eigenes Bild, unabhängig davon, wo sie liegt. Das ist die eigentliche Arbeit, und sie
+      bleibt dir erhalten, auch wenn du irgendwann einen anderen Stapel lernst. Gelernt wird farbweise.
+    </p>
+    <div class="chips" id="stack-farben"></div>
+    <div class="menu">
+      <button data-stackmode="s-bild"><span class="t">Bilder kennenlernen<small>Karte, Wort und Herleitung</small></span><span class="chev">›</span></button>
+      <button data-stackmode="s-k2w"><span class="t">Karte zu Wort<small>Was ist Pik-Sieben bei dir?</small></span><span class="chev">›</span></button>
+      <button data-stackmode="s-w2k"><span class="t">Wort zu Karte<small>Zu welcher Karte gehört Puck?</small></span><span class="chev">›</span></button>
+      <button id="btn-karten"><span class="t">Alle 52 Karten<small>Merkwörter und Bilder pflegen</small></span><span class="chev">›</span></button>
+      <button id="btn-kwerk"><span class="t">Kartenwerkstatt<small>Wort eingeben, Karte zurückrechnen</small></span><span class="chev">›</span></button>
+    </div>
+
+    <div class="section-title" style="margin-top:30px">Stufe 2: die Reihenfolge</div>
+    <p class="note" style="margin-top:0" id="stack-stufe2-note"></p>
+    <div class="chips" id="stack-blocks"></div>
 
     <div class="gridwrap">
       <div class="gridhead">
@@ -425,18 +443,11 @@ input{font:inherit}
       </div>
     </div>
 
-    <div class="eyebrow" style="margin-bottom:6px">Blöcke</div>
-    <div class="chips" id="stack-blocks"></div>
-    <p class="note" style="margin-top:-8px">Ein Block sind 13 Positionen. Nimm den nächsten erst dazu, wenn der aktuelle steht.</p>
-
-    <div class="eyebrow" style="margin:22px 0 6px">Gezielt üben</div>
     <div class="menu">
-      <button data-stackmode="s-intro"><span class="t">Kennenlernen<small>Zahlbild, Karte und deine Verknüpfung</small></span><span class="chev">›</span></button>
+      <button data-stackmode="s-intro"><span class="t">Reihenfolge kennenlernen<small>Zahlbild, Karte und deine Verknüpfung</small></span><span class="chev">›</span></button>
       <button data-stackmode="s-p2c"><span class="t">Position zu Karte<small>Was liegt auf 34?</small></span><span class="chev">›</span></button>
       <button data-stackmode="s-c2p"><span class="t">Karte zu Position<small>Wo liegt Herz-Bube?</small></span><span class="chev">›</span></button>
       <button data-stackmode="s-next"><span class="t">Nachbarn<small>Welche Karte kommt danach?</small></span><span class="chev">›</span></button>
-      <button id="btn-karten"><span class="t">Alle 52 Karten<small>Merkwörter und Bilder pflegen</small></span><span class="chev">›</span></button>
-      <button id="btn-kwerk"><span class="t">Kartenwerkstatt<small>Wort eingeben, Karte zurückrechnen</small></span><span class="chev">›</span></button>
     </div>
   </section>
 
@@ -658,10 +669,11 @@ const DEFAULTS = {
   /* Optional second deck, see the stapel section. Own boxes, own images, so the
      number cards above stay exactly as they were. */
   stack: {
-    bilder: {},           // "10S" -> {bild}      your image for that card
-    links: {},            // "34"  -> string      how the number image and the card are tied
-    cards: {},            // "34:p2c" -> {box, due, seen, fast}
-    unlocked: [0],        // blocks of thirteen
+    bilder: {},           // "10S" -> {wort, bild}   your own word and image for that card
+    links: {},            // "34"  -> string         how the number image and the card are tied
+    cards: {},            // "34:p2c" and "10S:k2w" -> {box, due, seen, fast}
+    farben: ["S"],        // stage one: suits whose card images are being learned
+    unlocked: [],         // stage two: blocks of thirteen positions
   },
 };
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -882,8 +894,11 @@ function renderHome(){
   $("#blitz-best").textContent = state.stats.blitzBest ? "Best " + state.stats.blitzBest : "";
   $("#w2n-chain").textContent = chainSize() > 1 ? chainSize() + "er" : "";
   $("#menu-stack").hidden = !state.settings.stack || !STACK.length;
+  /* Solange Stufe 2 zu ist, zählt der Badge die Kartenbilder: das ist gerade
+     die Arbeit, die ansteht. */
   $("#stack-badge").textContent = state.settings.stack && STACK.length
-    ? `${stackMastered()}/${STACK.length}` : "";
+    ? (state.stack.unlocked.length ? `${stackMastered()}/${STACK.length}` : `${kartenSitzen()}/52 Bilder`)
+    : "";
 
   const grid = $("#grid");
   grid.textContent = "";
@@ -1022,20 +1037,22 @@ function startSession(mode){
   const nothingPending = (mode === "heute"
       && !dueCards().length
       && !newNumbers(state.settings.newPerDay).length)
-    || (mode === "s-heute" && !stackDue().length && !stackFresh().length);
+    || (mode === "s-heute" && !stackDue().length && !stackFresh().length
+      && !kartenDue().length && !kartenFresh().length);
   drill.queue = buildQueue(mode);
   if(!drill.queue.length){
-    toast(mode === "intro" || mode === "s-intro"
-      ? "Hier ist alles schon eingeführt"
-      : "Nichts zu üben, schalte einen Block frei");
+    if(mode === "intro" || mode === "s-intro" || mode === "s-bild") toast("Hier ist alles schon eingeführt");
+    else if(stackMode && !stackPositions().length) toast("Stufe 2 ist noch zu, öffne unten einen Block");
+    else toast("Nichts zu üben, schalte einen Block frei");
     return;
   }
   const size = chainSize();
   $("#drill-title").textContent = nothingPending ? "Auffrischen" : ({
     heute: "Heute üben", intro: "Kennenlernen", n2w: "Zahl zu Wort",
     w2n: size > 1 ? `Wort zu Zahl, ${size}er-Kette` : "Wort zu Zahl",
-    "s-heute": "Stapel üben", "s-intro": "Stapel kennenlernen",
-    "s-p2c": "Position zu Karte", "s-c2p": "Karte zu Position", "s-next": "Nachbarn"
+    "s-heute": "Stapel üben", "s-intro": "Reihenfolge kennenlernen",
+    "s-p2c": "Position zu Karte", "s-c2p": "Karte zu Position", "s-next": "Nachbarn",
+    "s-bild": "Kartenbilder kennenlernen", "s-k2w": "Karte zu Wort", "s-w2k": "Wort zu Karte"
   })[mode] || mode;
   show("drill");
   if(mode === "w2n" && (state.settings.w2nChain || 1) > 1 && size === 1){
@@ -1399,7 +1416,9 @@ function settle(task, correct, ms){
   drill.total++;
   if(correct) drill.correct++;
   const result = task.stack
-    ? gradeStack(task.position, task.direction, correct, ms)
+    ? (task.code
+      ? gradeKarte(task.code, task.direction, correct, ms)
+      : gradeStack(task.position, task.direction, correct, ms))
     : grade(task.number, task.direction, correct, ms);
   const verdict = $("#drill-verdict");
   verdict.className = "verdict " + (correct ? "right" : "wrong");
@@ -1828,6 +1847,73 @@ function stackPositions(){
   return list.sort((a, b) => a - b);
 }
 
+/* --- Stufe 1: die Kartenbilder ------------------------------------ */
+/* Erst muss jede Karte ihr eigenes Bild haben, unabhängig davon, wo sie im
+   Stapel liegt. Gelernt wird farbweise, 13 Karten am Stück. */
+const KARTEN_DIRECTIONS = ["k2w", "w2k"];
+const FARB_REIHENFOLGE = ["S", "H", "D", "C"];
+const KARTEN_WERTE = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+function kartenDerFarbe(farbe){
+  return KARTEN_WERTE.map(wert => wert + farbe).filter(code => KARTEN.has(code) || STACK.includes(code));
+}
+function offeneKarten(){
+  return FARB_REIHENFOLGE.filter(f => state.stack.farben.includes(f)).flatMap(kartenDerFarbe);
+}
+function alleKarten(){ return FARB_REIHENFOLGE.flatMap(kartenDerFarbe); }
+function getKartenCard(code, direction){
+  return state.stack.cards[`${code}:${direction}`] || null;
+}
+function kartenLevel(code){
+  const boxes = KARTEN_DIRECTIONS.map(d => { const c = getKartenCard(code, d); return c ? c.box : 0; });
+  return Math.min(...boxes);
+}
+function gradeKarte(code, direction, correct, ms){
+  const id = `${code}:${direction}`;
+  const card = state.stack.cards[id] || {box: 1, due: today(), seen: 0, fast: 0};
+  const fast = ms <= state.settings.fastMs;
+  card.seen++;
+  if(correct){
+    if(fast){ card.box = Math.min(5, card.box + 1); card.fast++; }
+  }else{
+    card.box = 1;
+  }
+  card.due = addDays(INTERVALS[card.box]);
+  card.last = ms;
+  state.stack.cards[id] = card;
+  bumpToday();
+  save();
+  return {correct, fast, box: card.box};
+}
+function seedKarte(code, box){
+  for(const direction of KARTEN_DIRECTIONS){
+    const id = `${code}:${direction}`;
+    if(!state.stack.cards[id]) state.stack.cards[id] = {box, due: addDays(INTERVALS[box]), seen: 0, fast: 0};
+  }
+  save();
+}
+function kartenDue(){
+  const list = [];
+  for(const code of offeneKarten()){
+    for(const direction of KARTEN_DIRECTIONS){
+      if(isDue(getKartenCard(code, direction))) list.push({code, direction});
+    }
+  }
+  return list;
+}
+function kartenFresh(){
+  return offeneKarten().filter(code => !getKartenCard(code, "k2w") && !getKartenCard(code, "w2k"));
+}
+function kartenSitzen(){ return alleKarten().filter(code => kartenLevel(code) >= 4).length; }
+/* Wie viele Karten eines Positionsblocks schon sicher sind. Das ist das Maß
+   dafür, ob Stufe 2 für diesen Block Sinn ergibt. */
+function blockKartenFest(block){
+  const codes = [];
+  for(let p = block * STACK_BLOCK + 1; p <= Math.min(STACK.length, (block + 1) * STACK_BLOCK); p++){
+    codes.push(cardAt(p));
+  }
+  return {fest: codes.filter(code => kartenLevel(code) >= 3).length, gesamt: codes.length};
+}
+
 /* --- Leitner, gleiche Regeln wie bei den Zahlen ------------------- */
 function stackCardId(position, direction){ return `${position}:${direction}`; }
 function getStackCard(position, direction){
@@ -1880,6 +1966,13 @@ function stackMastered(){
 
 function stackQueue(mode){
   const positions = stackPositions();
+  if(mode === "s-bild"){
+    return kartenFresh().slice(0, STACK_BLOCK).map(code => ({stack: true, kind: "intro", code}));
+  }
+  if(mode === "s-k2w" || mode === "s-w2k"){
+    return shuffle(offeneKarten()).slice(0, 20)
+      .map(code => ({stack: true, kind: "quiz", code, direction: mode.slice(2)}));
+  }
   if(mode === "s-intro"){
     return stackFresh().slice(0, STACK_BLOCK).map(p => ({stack: true, kind: "intro", position: p}));
   }
@@ -1891,7 +1984,14 @@ function stackQueue(mode){
       : positions;
     return shuffle(pool).slice(0, 20).map(p => ({stack: true, kind: "quiz", position: p, direction}));
   }
+  /* Heute übt beide Stufen, die Bilder zuerst: ohne sie hängt die
+     Reihenfolge in der Luft. */
   const tasks = [];
+  for(const code of kartenFresh().slice(0, state.settings.newPerDay)){
+    tasks.push({stack: true, kind: "intro", code});
+    tasks.push({stack: true, kind: "quiz", code, direction: "k2w"});
+  }
+  tasks.push(...shuffle(kartenDue()).map(c => ({stack: true, kind: "quiz", code: c.code, direction: c.direction})));
   for(const position of stackFresh().slice(0, state.settings.newPerDay)){
     tasks.push({stack: true, kind: "intro", position});
     tasks.push({stack: true, kind: "quiz", position, direction: "p2c"});
@@ -1899,7 +1999,7 @@ function stackQueue(mode){
   const due = shuffle(stackDue()).map(c => ({stack: true, kind: "quiz", position: c.position, direction: c.direction}));
   const queue = tasks.concat(due).slice(0, 45);
   if(queue.length) return queue;
-  // nichts fällig, nichts neu: die schwächsten Karten auffrischen
+  // nichts fällig, nichts neu: die schwächsten Karten auffrischen, beide Stufen
   const cards = [];
   for(const position of positions){
     for(const direction of STACK_DIRECTIONS){
@@ -1907,18 +2007,142 @@ function stackQueue(mode){
       cards.push({position, direction, box: card ? card.box : 0});
     }
   }
+  for(const code of offeneKarten()){
+    for(const direction of KARTEN_DIRECTIONS){
+      const card = getKartenCard(code, direction);
+      cards.push({code, direction, box: card ? card.box : 0});
+    }
+  }
   return shuffle(cards)
     .sort((a, b) => a.box - b.box)
     .slice(0, 20)
-    .map(c => ({stack: true, kind: "quiz", position: c.position, direction: c.direction}));
+    .map(c => c.code
+      ? {stack: true, kind: "quiz", code: c.code, direction: c.direction}
+      : {stack: true, kind: "quiz", position: c.position, direction: c.direction});
 }
 
-/* --- die vier Aufgabenarten -------------------------------------- */
+/* --- die Aufgabenarten ------------------------------------------- */
 function renderStackTask(task){
+  if(task.code){
+    if(task.kind === "intro") return renderKartenBild(task);
+    return task.direction === "w2k" ? renderWortZuKarte(task) : renderKarteZuWort(task);
+  }
   if(task.kind === "intro") return renderStackIntro(task);
   if(task.direction === "c2p") return renderCardToPosition(task);
   if(task.direction === "next") return renderNextCard(task);
   return renderPositionToCard(task);
+}
+function renderKartenBild(task){
+  const code = task.code;
+  const prompt = $("#drill-prompt");
+  prompt.textContent = "";
+  prompt.appendChild(el("div", "ask", "Neues Kartenbild"));
+  const karte = renderKarte(code);
+  karte.classList.add("bigkarte");
+  prompt.appendChild(karte);
+  const wort = kartenWort(code);
+  if(wort) prompt.appendChild(el("div", "kartenwort", wort));
+  const bild = kartenbild(code);
+  if(bild) prompt.appendChild(el("p", "note", bild));
+  if(!istPerson(code)) prompt.appendChild(renderBreakdown(wort));
+
+  const answer = $("#drill-answer");
+  answer.textContent = "";
+  const edit = el("button", "btn quiet", "Wort oder Bild ändern");
+  edit.addEventListener("click", () => openKarte(code));
+  answer.appendChild(edit);
+  const buttons = el("div", "selfcheck");
+  buttons.style.marginTop = "8px";
+  const known = el("button", "btn quiet", "Kenne ich schon");
+  known.addEventListener("click", () => { seedKarte(code, 3); advance(); });
+  const learn = el("button", "btn", "Merke ich mir");
+  learn.addEventListener("click", () => { seedKarte(code, 1); advance(); });
+  buttons.appendChild(known);
+  buttons.appendChild(learn);
+  answer.appendChild(buttons);
+  $("#drill-hint").textContent = istPerson(code)
+    ? `${karteName(code)}: die Art der Person nennt den Rang, der Anfangslaut die Farbe.`
+    : `${karteName(code)}: ${suitOf(code).name} steckt im ersten Konsonanten, der Wert im Rest.`;
+}
+function wortOptionen(code, count){
+  const pool = alleKarten().filter(c => c !== code && kartenWort(c));
+  const gleicheFarbe = pool.filter(c => c.slice(-1) === code.slice(-1));
+  const picked = shuffle(gleicheFarbe).slice(0, count);
+  const rest = shuffle(pool.filter(c => !picked.includes(c)));
+  while(picked.length < count && rest.length) picked.push(rest.pop());
+  return picked;
+}
+function renderKarteZuWort(task){
+  const code = task.code;
+  const card = getKartenCard(code, "k2w");
+  const box = card ? card.box : 1;
+  const prompt = $("#drill-prompt");
+  prompt.textContent = "";
+  prompt.appendChild(el("div", "ask", "Welches Bild?"));
+  const karte = renderKarte(code);
+  karte.classList.add("bigkarte");
+  prompt.appendChild(karte);
+  const answer = $("#drill-answer");
+  answer.textContent = "";
+
+  if(box <= 2){
+    const options = shuffle(wortOptionen(code, 5).concat([code]));
+    const grid = el("div", "options");
+    for(const kandidat of options){
+      const button = el("button", "opt");
+      button.dataset.karte = kandidat;
+      button.textContent = kartenWort(kandidat);
+      button.addEventListener("click", () => {
+        if(drill.answered) return;
+        drill.answered = true;
+        const correct = kandidat === code;
+        button.classList.add(correct ? "right" : "wrong");
+        if(!correct){
+          [...grid.children].forEach(child => {
+            if(child.dataset.karte === code) child.classList.add("right");
+          });
+        }
+        settle(task, correct, performance.now() - drill.startedAt);
+      });
+      grid.appendChild(button);
+    }
+    answer.appendChild(grid);
+    $("#drill-hint").textContent = istPerson(code)
+      ? "Bildkarten sind Personen, der Anfangslaut nennt die Farbe."
+      : `${suitOf(code).name} ist der erste Konsonant, ${valueOf(code)} der Rest.`;
+  }else{
+    const reveal = el("button", "btn", "Aufdecken");
+    reveal.addEventListener("click", () => {
+      const ms = performance.now() - drill.startedAt;
+      const wort = el("div", "kartenwort reveal", kartenWort(code));
+      prompt.appendChild(wort);
+      const bild = kartenbild(code);
+      if(bild) prompt.appendChild(el("p", "note", bild));
+      answer.textContent = "";
+      const check = el("div", "selfcheck");
+      const no = el("button", "btn quiet", "Wusste ich nicht");
+      no.addEventListener("click", () => settle(task, false, ms));
+      const yes = el("button", "btn", "Hatte ich");
+      yes.addEventListener("click", () => settle(task, true, ms));
+      check.appendChild(no);
+      check.appendChild(yes);
+      answer.appendChild(check);
+    });
+    answer.appendChild(reveal);
+    $("#drill-hint").textContent = "Erst das Bild sehen, dann aufdecken.";
+  }
+}
+function renderWortZuKarte(task){
+  const code = task.code;
+  const prompt = $("#drill-prompt");
+  prompt.textContent = "";
+  prompt.appendChild(el("div", "ask", "Welche Karte?"));
+  prompt.appendChild(el("div", "bigword", kartenWort(code)));
+  const answer = $("#drill-answer");
+  answer.textContent = "";
+  answer.appendChild(kartenGitter(code, wortOptionen(code, 5).concat([code]),
+    correct => settle(task, correct, performance.now() - drill.startedAt), {mitWort: false}));
+  $("#drill-hint").textContent = "Erst die Farbe aus dem Anfangslaut, dann den Wert.";
 }
 function stackHead(position, {karte = true, zahl = true} = {}){
   const row = el("div", "kartenzeile");
@@ -1981,13 +2205,15 @@ function kartenOptionen(position, count){
   while(picked.length < count && rest.length) picked.push(rest.pop());
   return picked.map(cardAt);
 }
-function kartenGitter(richtig, options, onPick){
+/* mitWort aus, wenn das Wort selbst die Frage ist: sonst steht die Antwort
+   unter jeder Karte. */
+function kartenGitter(richtig, options, onPick, {mitWort = true} = {}){
   const grid = el("div", "options");
   for(const code of shuffle(options)){
     const button = el("button", "opt");
     button.dataset.karte = code;
     button.appendChild(renderKarte(code));
-    const wort = kartenWort(code);
+    const wort = mitWort ? kartenWort(code) : "";
     if(wort) button.appendChild(el("div", "optwort", wort));
     button.addEventListener("click", () => {
       if(drill.answered) return;
@@ -2117,8 +2343,8 @@ function renderCardToPosition(task){
 
 /* --- Übersicht, Raster und Kartenbilder --------------------------- */
 function renderStack(){
-  const due = stackDue().length;
-  const fresh = stackFresh().length;
+  const due = stackDue().length + kartenDue().length;
+  const fresh = stackFresh().length + kartenFresh().length;
   const total = due + fresh;
   const count = $("#stack-due");
   count.textContent = total;
@@ -2128,7 +2354,36 @@ function renderStack(){
     : (due + " zur Wiederholung" + (fresh ? ", " + fresh + " neu" : ""));
   $("#stack-practice").textContent = total === 0 ? "Trotzdem üben" : "Üben";
   $("#stack-mastered").textContent = stackMastered();
-  $("#stack-open").textContent = stackPositions().length;
+  $("#stack-bilder").textContent = kartenSitzen();
+
+  const farbChips = $("#stack-farben");
+  farbChips.textContent = "";
+  for(const farbe of FARB_REIHENFOLGE){
+    const codes = kartenDerFarbe(farbe);
+    const fest = codes.filter(code => kartenLevel(code) >= 4).length;
+    const offen = state.stack.farben.includes(farbe);
+    const chip = el("button", "chip" + (offen ? " on" : ""),
+      `${SUITS[farbe].zeichen} ${SUITS[farbe].name} ${fest}/${codes.length}`);
+    chip.addEventListener("click", () => {
+      if(offen){
+        if(state.stack.farben.length === 1){ toast("Mindestens eine Farbe muss offen bleiben"); return; }
+        state.stack.farben = state.stack.farben.filter(f => f !== farbe);
+      }else{
+        state.stack.farben.push(farbe);
+      }
+      save();
+      renderStack();
+    });
+    farbChips.appendChild(chip);
+  }
+
+  const naechster = FARB_REIHENFOLGE.length && state.stack.unlocked.length < Math.ceil(STACK.length / STACK_BLOCK)
+    ? Math.max(-1, ...state.stack.unlocked) + 1 : null;
+  $("#stack-stufe2-note").textContent = state.stack.unlocked.length
+    ? "Position 1 bis 52 hängen an deinen Zahlenbildern. Ein Block sind 13 Positionen."
+    : (naechster !== null
+      ? "Noch zu. Öffne einen Block, sobald die Bilder der darin liegenden Karten sitzen: sonst verknüpfst du Zahlen mit Karten, die du noch suchen musst."
+      : "Noch zu.");
 
   const grid = $("#stack-grid");
   grid.textContent = "";
@@ -2148,19 +2403,48 @@ function renderStack(){
   const blocks = Math.ceil(STACK.length / STACK_BLOCK);
   for(let block = 0; block < blocks; block++){
     const chip = el("button", "chip" + (state.stack.unlocked.includes(block) ? " on" : ""), stackBlockLabel(block));
-    chip.addEventListener("click", () => {
-      if(state.stack.unlocked.includes(block)){
-        if(state.stack.unlocked.length === 1){ toast("Mindestens ein Block muss offen bleiben"); return; }
-        state.stack.unlocked = state.stack.unlocked.filter(b => b !== block);
-      }else{
-        state.stack.unlocked.push(block);
-        state.stack.unlocked.sort((a, b) => a - b);
-      }
-      save();
-      renderStack();
-    });
+    chip.addEventListener("click", () => oeffneStackBlock(block));
     chips.appendChild(chip);
   }
+}
+/* Stufe 2 hat einen Türsteher: ein Block ergibt erst Sinn, wenn die Bilder der
+   dreizehn Karten sitzen, die darin liegen. Verboten wird nichts, wie überall
+   in dieser App, aber gefragt schon. */
+function oeffneStackBlock(block){
+  if(state.stack.unlocked.includes(block)){
+    state.stack.unlocked = state.stack.unlocked.filter(b => b !== block);
+    save();
+    renderStack();
+    return;
+  }
+  const oeffnen = () => {
+    state.stack.unlocked.push(block);
+    state.stack.unlocked.sort((a, b) => a - b);
+    save();
+    renderStack();
+  };
+  const stand = blockKartenFest(block);
+  if(stand.fest >= stand.gesamt - 3){ oeffnen(); toast(`${stackBlockLabel(block)} freigeschaltet`); return; }
+  openSheet(sheet => {
+    sheet.appendChild(el("p", null,
+      `Von den ${stand.gesamt} Karten auf ${stackBlockLabel(block)} sitzen erst ${stand.fest} als Bild.`));
+    sheet.appendChild(el("p", "note",
+      "Erst das Kartenbild, dann die Verknüpfung mit der Zahl. Sonst hängst du ein Bild an etwas, das du selbst noch suchen musst."));
+    const fehlend = [];
+    for(let p = block * STACK_BLOCK + 1; p <= Math.min(STACK.length, (block + 1) * STACK_BLOCK); p++){
+      const code = cardAt(p);
+      if(kartenLevel(code) < 3) fehlend.push(`${karteText(code)} ${kartenWort(code)}`);
+    }
+    if(fehlend.length) sheet.appendChild(el("p", "note", "Fehlt noch: " + fehlend.join(", ")));
+    const buttons = el("div", "rowbtns");
+    const anyway = el("button", "btn", "Trotzdem öffnen");
+    anyway.addEventListener("click", () => { oeffnen(); closeSheet(); toast("Freigeschaltet"); });
+    const wait = el("button", "btn ghost", "Erst Bilder üben");
+    wait.addEventListener("click", closeSheet);
+    buttons.appendChild(anyway);
+    buttons.appendChild(wait);
+    sheet.appendChild(buttons);
+  });
 }
 function openStackPosition(position){
   const code = cardAt(position);
@@ -2178,10 +2462,11 @@ function openStackPosition(position){
     head.appendChild(card);
     sheet.appendChild(head);
 
-    const bild = kartenbild(code);
-    sheet.appendChild(el("p", "note", bild
-      ? `Dein Bild für ${karteText(code)}: ${bild}`
-      : `Für ${karteText(code)} steht noch kein Bild. Das gehört in die Kartenliste.`));
+    const wort = kartenWort(code);
+    const stufe1 = kartenLevel(code);
+    sheet.appendChild(el("p", "note", wort
+      ? `${karteText(code)} ist ${wort}, als Bild in Fach ${stufe1} von 5.`
+      : `Für ${karteText(code)} steht noch kein Wort.`));
 
     const field = el("div", "field");
     field.appendChild(el("label", null, "Verknüpfung von Zahlbild und Karte"));
@@ -2233,6 +2518,10 @@ function openKarte(code){
       sheet.appendChild(vorschlag);
       if(eintrag.bild) sheet.appendChild(el("p", "note", eintrag.bild));
     }
+    const stufe1 = kartenLevel(code);
+    sheet.appendChild(el("p", "note", stufe1
+      ? `Als Bild in Fach ${stufe1} von 5.`
+      : "Als Bild noch nicht geübt."));
     if(STACK.includes(code)) sheet.appendChild(el("p", "note", `Liegt im Stapel auf Position ${STACK.indexOf(code) + 1}.`));
 
     const fieldWord = el("div", "field");
